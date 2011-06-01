@@ -1,0 +1,6 @@
+* Geodesic 
+Shortest distance between two points.  A line in Euclidian 
+
+* Diffeomorphism
+
+* Hamiltonian space
