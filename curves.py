@@ -14,45 +14,90 @@ def split_array(q):
 
     return X,Y
 
+def get_sort_order(fun_space):
+    vals = interpolate(Expression(('x[0]','x[0]')), fun_space)
+    return np.argsort(split_array(vals)[0])
 
 
-plt.ion()
-plt.figure()
-#plt.axis('equal')
-
-
-dt = 0.01
 
 
 mesh = Interval(100, 0, 2*pi)
 
-# what's happening at higher orders?
-V = VectorFunctionSpace(mesh, 'DG', 1, dim=2)
+N = 1
+M = 1
 
-q0 = Expression(('cos(x[0])','sin(x[0])'))
+VD = VectorFunctionSpace(mesh, 'DG', N, dim=2)
+dVD = VectorFunctionSpace(mesh, 'DG', N - 1, dim=2)
+VC = VectorFunctionSpace(mesh, 'CG', M, dim=2)
+
+# Template
+qA = Expression(('sin(x[0])','cos(x[0])'))
+# Target
+qB = Expression(('2*sin(x[0])','2*cos(x[0])'))
 
 
-q_prev = interpolate(q0, V)
+v = TestFunction(VC)
+
+# make array of these:
+u = TrialFunction(VC)
+
+
+q = interpolate(qA, VD)
+f = interpolate(qB, VD)
+
+alpha_sq = 1
+
+#dq = project(q.dx(0), dVD)
+dq = q.dx(0)
+j = sqrt(dot(dq,dq))
+
+L = dot(v,f)*dx
+a = dot(v,u)*j*dx + (alpha_sq*dot(v.dx(0),u.dx(0))/j)*dx
+
+problem = VariationalProblem(a,L)
+u = problem.solve()
+
+# A = assemble(a)
+# b = assemble(L)
+
+# u = Function(VC)
+
+# solve(A, u.vector(), b)
+
+
+#---------------------
+q_prev = interpolate(qA, VD)
+
+plt.ion()
+plt.figure()
+plt.axis('equal')
 
 line, = plt.plot(*split_array(q_prev))
 plt.xlim(-3,3)
 plt.ylim(-3,3)
 
-r = TestFunction(V)
-q = TrialFunction(V)
 
-v = Expression(('.5*x[0]*sin(x[0])','2*cos(x[0])'))
+dt = 0.01
+
+
+r = TestFunction(VD)
+q = TrialFunction(VD)
+
+# v = Expression(('sin(x[0])','cos(x[0])'))
+
 
 
 a = dot(r,q)*dx
-L = dot(q_prev,r)*dx -  dt*dot(r,v)*dx
+L = dot(q_prev,r)*dx -  dt*dot(r,u)*dx
 
 A = assemble(a)
 
-q = Function(V)   # the unknown at a new time level
+q = Function(VD)   # the unknown at a new time level
 T = 1             # total simulation time
 t = dt
 
+
+sorted = get_sort_order(VD)
 
 while t <= T:
     b = assemble(L)
@@ -62,9 +107,16 @@ while t <= T:
     t += dt
     q_prev.assign(q)
 
-    line.set_data(split_array(q))
+    X,Y = split_array(q)
+    line.set_data(X[sorted], Y[sorted])
     #plt.gca().relim()
     #plt.gca().autoscale_view()
     plt.draw()
+
+
+
+
+
+
 
 
