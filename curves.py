@@ -39,32 +39,46 @@ qB = Expression(('2*sin(x[0])','2*cos(x[0])'))
 v = TestFunction(VC)
 
 # make array of these:
-u = TrialFunction(VC)
 
+u = TrialFunction(VC)
 
 q = interpolate(qA, VD)
 f = interpolate(qB, VD)
 
 alpha_sq = 1
 
-#dq = project(q.dx(0), dVD)
+dq = project(q.dx(0), dVD)
 dq = q.dx(0)
 j = sqrt(dot(dq,dq))
 
-L = dot(v,f)*dx
+B = dot(v,f)*dx
 a = dot(v,u)*j*dx + (alpha_sq*dot(v.dx(0),u.dx(0))/j)*dx
 
-problem = VariationalProblem(a,L)
+problem = VariationalProblem(a,B)
+
+s = energy_norm(a, u)
+
 u = problem.solve()
 
+
+
+
+# same things, but with mass and stiffness matrices
+
+# m = dot(v,u)*j*dx
+# l = (alpha_sq*dot(v.dx(0),u.dx(0))/j)*dx
+
 # A = assemble(a)
-# b = assemble(L)
+# b = assemble(B)
 
-# u = Function(VC)
+# M = assemble(m)
+# L = assemble(l)
 
-# solve(A, u.vector(), b)
+# u2 = Function(VC)
 
+# solve(M, u2.vector(), b)
 
+#u = u2
 #---------------------
 q_prev = interpolate(qA, VD)
 
