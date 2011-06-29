@@ -47,7 +47,7 @@ f = interpolate(qB, VD)
 
 alpha_sq = 1
 
-dq = project(q.dx(0), dVD)
+#dq = project(q.dx(0), dVD)
 dq = q.dx(0)
 j = sqrt(dot(dq,dq))
 
@@ -56,11 +56,11 @@ a = dot(v,u)*j*dx + (alpha_sq*dot(v.dx(0),u.dx(0))/j)*dx
 
 problem = VariationalProblem(a,B)
 
-s = energy_norm(a, u)
+
 
 u = problem.solve()
 
-
+s = assemble(energy_norm(a, u))
 
 
 # same things, but with mass and stiffness matrices
