@@ -1,9 +1,15 @@
 from dolfin import *
 import numpy as np
 import scipy as sp
+from scipy.optimize import fmin_bfgs
 import matplotlib.pylab as plt
 
-class CurveOpt:
+class Immersion:
+
+    # flag to test if the arrays of U,Q, Qh need to be populated
+    # call populate_arrays if so 
+    populated = False
+
 
     def __init__(self, m = 100,n=100, deg_cont = 2, deg_dis = 1):
         self.M = m # number of nodal val
@@ -27,31 +33,30 @@ class CurveOpt:
         self.qB_exp = Expression(('2*sin(x[0])','3*cos(x[0])'))
         self.qB = interpolate(self.qB_exp, self.V)
 
+
+        
+        x, y = self.mat_shape = (np.shape(self.qB.vector().array())[0], self.N)
+        self.vec_size = x * y
+
         # initialize arrays
         self.U =  [Function(self.V) for i in xrange(self.N)]
         self.Q =  [Function(self.V) for i in xrange(self.N)] 
         self.Qh = [Function(self.V) for i in xrange(self.N)] 
         self.dS = [Function(self.V) for i in xrange(self.N)] 
 
-        # set initial guess for U
-        self.init_U()
-        # calculate q at each timestep using initial guess
-        self.calc_Q()
 
+    def min(self):
+        U_initial = np.ones(self.mat_shape)
 
-    def opt(self):
-        return sp.optimize.fmin_bfgs(self.S, self.U, fprime=self.calc_dS)
-
-        
-    def init_U(self):
-        u = Expression(('.1*sin(x[0])','.1*cos(x[0])'))
-
-        U = np.zeros((np.shape(self.qA.vector().array())[0],self.N))
+        u = Expression(('cos(x[0])','sin(x[0])'))
+        u = interpolate(u, self.V)
 
         for n in xrange(self.N):
-            un = interpolate(u, self.V)
-            noise = un.vector().array()
-            self.U[n].assign(un)
+            U_initial[:,n] = u.vector().array()/20
+
+
+        return fmin_bfgs(self.calc_S, U_initial, fprime=self.calc_dS, \
+                             callback=self.need_to_repopulate)
 
  
     def calc_Q(self):
@@ -96,7 +101,7 @@ class CurveOpt:
         return qh1
 
     
-    def qh(self):
+    def calc_Qh(self):
         qh = self.qh_at_t1() 
 
         # Find q hat at each time step by stepping backwards in time from qh1
@@ -135,14 +140,17 @@ class CurveOpt:
         return  sqrt(dot(dq,dq))
         
 
-    def S(self, U):
+    def calc_S(self, U):
+        if not self.populated:
+            self.populate_arrays(U) 
 
         S = 0
 
         for n in xrange(self.N):
             j = self.j(self.Q[n])
 
-            a = (dot(U[n],U[n])*j)*dx + .5*(self.alpha_sq*dot(U[n].dx(0), U[n].dx(0))/j)*dx
+            a = (dot(self.U[n],self.U[n])*j)*dx \
+                + .5*(self.alpha_sq*dot(self.U[n].dx(0), self.U[n].dx(0))/j)*dx
             #S += .5*assemble(energy_norm(a,U[n]))*self.dt
             S += assemble(a)
 
@@ -156,7 +164,9 @@ class CurveOpt:
 
         
     def calc_dS(self, U):
-
+        if not self.populated:
+            self.populate_arrays(U) 
+        
         v = TestFunction(self.V)
         dS = TrialFunction(self.V)
         
@@ -164,7 +174,7 @@ class CurveOpt:
         A = assemble(a)
 
         for n in xrange(self.N):
-            u = U[n]
+            u = self.U[n]
             j = self.j(self.Q[n])
             qh = self.Qh[n]
 
@@ -173,49 +183,59 @@ class CurveOpt:
 
             solve(A, self.dS[n].vector(), b)
 
+        return np.reshape(self.coeffs_to_matrix(self.dS), self.vec_size)
 
-    def plot_steps(self,Q):
+    def need_to_repopulate(self, xk):
+        print "New interation, resetting flag"
+        print xk
+        print "-------------"
+        self.populated = False
+
+    def populate_arrays(self, U):
+
+        self.U = self.matrix_to_coeffs(np.reshape(U, self.mat_shape))
+        self.calc_Q()
+        self.calc_Qh()
+        self.populated = True
+        
+
+    def coeffs_to_matrix(self, C):
+        mat = np.zeros(self.mat_shape)
+
+        for n in xrange(self.N):
+            mat[:,n] = C[n].vector().array()
+
+        return mat
+
+    def matrix_to_coeffs(self, mat):
+        C =  [Function(self.V) for i in xrange(self.N)]
+
+        for n in xrange(self.N):
+            C[n].vector()[:] = mat[:,n]
+
+        return C
+
+    def plot_steps(self):
         plt.ion()
         plt.figure()
+
         plt.axis('equal')
 
-        line, = plt.plot(*self.split_array(Q[0]))
+        plt.plot(*self.split_array(self.qB))
+
+        line, = plt.plot(*self.split_array(self.Q[0]))
         plt.xlim(-3,3)
         plt.ylim(-3,3)
         
         sorted = self.get_sort_order(self.V)
 
-        for q in Q:
+        for q in self.Q:
             X,Y = self.split_array(q.vector().array())
 
             line.set_data(X[sorted], Y[sorted])
 
             plt.draw()
 
-    def plot_du(self, Q):
-        dv = TestFunction(o.dV)
-        du = TrialFunction(o.dV)
-        
-        q = Q
-
-        a = dot(dv,du)*dx 
-        l = dot(dv,q.dx(0))*dx
-
-        A = assemble(a)
-        b = assemble(l)
-
-        du0 = Function(o.dV)
-        solve(A, du0.vector(), b)
-
-
-        #plt.figure()
-        #plt.axis('equal')
-
-        dX, dY = self.split_array(du0)
-        print np.min(np.sqrt(dX**2+dY**2))
-
-
-        #        plt.show()              
 
 
     def test(self, eps = 1e-10):

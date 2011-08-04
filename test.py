@@ -8,6 +8,9 @@ import matplotlib.pylab as plt
 
 import unittest
 
+from image_deformation import Immersion
+
+
 class TestCurveOptimizer(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -20,7 +23,6 @@ class TestCurveOptimizer(unittest.TestCase):
 
         self.dolf_sin = dol.interpolate(exp, V)
         self.np_sin = np.sin(np.linspace(0,2*np.pi, self.M + 1))
-
 
         
 
@@ -115,6 +117,46 @@ class TestCurveOptimizer(unittest.TestCase):
         #npt.assert_allclose(Ax[ordr], Bx[ordr], rtol=1e-10, atol=1e-12, \
         #                        err_msg="Different methods of coeff init failed")
         
+
+
+    def test_derivative(self):
+        im = Immersion(100,100)
+        
+        u = dol.Expression(('cos(x[0])','sin(x[0])'))
+        u = dol.interpolate(u, im.V)
+
+        U = np.ones(im.mat_shape)/10
+
+        for n in xrange(im.N):
+            U[:,n] = u.vector().array()
+
+
+        S  = im.calc_S(U)
+        dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
+
+        vdS = 0
+
+        v = dol.Expression(('cos(x[0])','cos(x[0])'))
+        v = dol.interpolate(v, im.V)
+
+
+        for dS in im.matrix_to_coeffs(dSarr):
+            vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
+
+        Up = U
+
+        eps = 10e-16
+
+        for n in xrange(im.N):
+            Up[:,n] = U[:,n] + eps*v.vector().array()
+
+        im.populated = False
+        Sp = im.calc_S(Up)
+
+        lim = (Sp - S)/eps
+
+        print lim, vdS
+    
 
     # UTILITY FUNCTIONS
     # -----------------
