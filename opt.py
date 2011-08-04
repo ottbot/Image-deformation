@@ -1,5 +1,3 @@
-
-# todo: put dolfin in own namespace?
 from dolfin import *
 import numpy as np
 import scipy as sp
@@ -15,7 +13,7 @@ class CurveOpt:
 
         self.mesh = Interval(self.M, 0, 2*pi)
 
-        self.dV  = VectorFunctionSpace(self.mesh, 'DG', deg_cont - 1, dim=2)
+        self.dV = VectorFunctionSpace(self.mesh, 'DG', deg_cont - 1, dim=2)
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
 
         self.sigma_sq = 1
@@ -24,8 +22,9 @@ class CurveOpt:
         # Template
         self.qA_exp = Expression(('sin(x[0])','cos(x[0])'))
         self.qA = interpolate(self.qA_exp, self.V)
+
         # Target
-        self.qB_exp = Expression(('2*sin(x[0])','2*cos(x[0])'))
+        self.qB_exp = Expression(('2*sin(x[0])','3*cos(x[0])'))
         self.qB = interpolate(self.qB_exp, self.V)
 
         # initialize arrays
@@ -34,13 +33,15 @@ class CurveOpt:
         self.Qh = [Function(self.V) for i in xrange(self.N)] 
         self.dS = [Function(self.V) for i in xrange(self.N)] 
 
-
         # set initial guess for U
         self.init_U()
         # calculate q at each timestep using initial guess
         self.calc_Q()
 
-        
+
+    def opt(self):
+        return sp.optimize.fmin_bfgs(self.S, self.U, fprime=self.calc_dS)
+
         
     def init_U(self):
         u = Expression(('.1*sin(x[0])','.1*cos(x[0])'))
@@ -52,8 +53,6 @@ class CurveOpt:
             noise = un.vector().array()
             self.U[n].assign(un)
 
-
-      
  
     def calc_Q(self):
         q_prev = self.qA
@@ -75,8 +74,6 @@ class CurveOpt:
             q_prev.assign(q)
 
             self.Q[n].assign(q)
-
-
 
             
     def qh_at_t1(self):
@@ -114,29 +111,22 @@ class CurveOpt:
         u = Function(self.V)
         q = Function(self.V)
         
-        o.A = A
         for n in reversed(xrange(self.N)):
             u.assign(self.U[n])
             q.assign(self.Q[n])
             j = self.j(q)
 
-            #print assemble(j*dx)
-
             c = .5*dot(u,u)/j - \
                 (self.alpha_sq/2.0)*dot(u.dx(0),u.dx(0))/dot(q.dx(0),q.dx(0))
-
-            #print assemble(c*dx)
 
             L = dot(p,qh)*dx - c*dot(p.dx(0),qh.dx(0))*self.dt*dx
             
             b = assemble(L)
-            print n, np.max(b.array())
-
 
             solve(A, qh_prev.vector(), b)
 
             qh.assign(qh_prev)
-            #print qh.vector().array()
+
             self.Qh[n].assign(qh)
 
                                           
@@ -145,51 +135,27 @@ class CurveOpt:
         return  sqrt(dot(dq,dq))
         
 
-    def S(self, U = False):
-        if not U:
-           U = self.U
+    def S(self, U):
 
         S = 0
-        n = 0
-
-        # v = TestFunction(self.V)
-        # u = TrialFunction(self.V)
-        
 
         for n in xrange(self.N):
             j = self.j(self.Q[n])
-            a = .5*(dot(U[n],U[n])*j)*dx + .5*(self.alpha_sq*dot(U[n].dx(0), U[n].dx(0))/j)*dx
+
+            a = (dot(U[n],U[n])*j)*dx + .5*(self.alpha_sq*dot(U[n].dx(0), U[n].dx(0))/j)*dx
             #S += .5*assemble(energy_norm(a,U[n]))*self.dt
-            S += assemble(a)*self.dt
+            S += assemble(a)
 
+        S = 0.5*S*self.dt
 
-        qB = self.qB 
+        diff = self.Qh[-1] - self.qB
+        err = assemble(inner(diff,diff)*dx)
 
-        e = self.Q[-1] - qB
-        error = inner(e,e)*dx
-        E = assemble(error)
-
-        #err = self.np_to_coeff(self.Q[-1].vector().array() - qB.vector().array())
-
-        #l2 = dot(v,u)*dx 
-
-        #TODO Why do I get different vals for this, and using .vector().norm('l2')
-        #l2norm = assemble(energy_norm(l2, err))
-
-        
-        #ex,ey = o.split_array(err.vector().array())
-
-        #print l2norm, e.vector().norm('l2')**2, E
-
-        # TODO ;; check with sin x,cos x.. 
-
-        return S + 1/(2.0*self.sigma_sq)*E
+        return S + 1/(self.sigma_sq)*err
 
 
         
-    def calc_dS(self, U = False):
-        if not U:
-            U = self.U
+    def calc_dS(self, U):
 
         v = TestFunction(self.V)
         dS = TrialFunction(self.V)
@@ -202,17 +168,13 @@ class CurveOpt:
             j = self.j(self.Q[n])
             qh = self.Qh[n]
 
-            
-
             L = dot(v,j*u)*dx + self.alpha_sq*dot(v.dx(0),u.dx(0))/j*dx - dot(v,qh)*dx
-            
             b = assemble(L)
 
             solve(A, self.dS[n].vector(), b)
 
 
     def plot_steps(self,Q):
-
         plt.ion()
         plt.figure()
         plt.axis('equal')
@@ -225,8 +187,6 @@ class CurveOpt:
 
         for q in Q:
             X,Y = self.split_array(q.vector().array())
-
-
 
             line.set_data(X[sorted], Y[sorted])
 
@@ -270,7 +230,6 @@ class CurveOpt:
 
         i = 0
 
-
         for n in xrange(self.N):
             dS = self.dS[n]
 
@@ -279,21 +238,52 @@ class CurveOpt:
 
             i += x
 
-            #TODO - need nicer way to add ufl coeffs
-
         i *= self.dt
 
-        lm = (self.S(self.pert_u(v,eps)) - self.S())/eps
-        print "lim: ",lm
         print "sum: ", i
+        
+        
+
+        # calculate the the value of the limit as eps at 1e-10 to 1e-20
+        eps = np.array([10**(-n) for n in np.linspace(10.0,17,10)])
+        lims = np.array([self.derivative_from_limit(v, x) for x in eps])
+
+
+        #plt.figure()
+        #plt.plot(lims/i)
+
+        for l in lims:
+            print "limit: ",l, 'solver: ', i
+
+    def derivative_from_limit(self,v, eps = 1e-10):
+        #S = self.S()
+
+        #var = 0
+        #for n in xrange(self.N):
+        #    var += assemble(dot(self.dS[n], v)*dx)
+
+
+        
+        #lim (S[u + eps*v] - S[u])/eps
+        # but: S[u +eps*v] = S[u] + eps*<dU/dS,v>
+        # so just return <dU/dS, v>
+        #return (eps*var)/eps
+
+                           
+
+        return (self.S(self.pert_u(v,eps)) - self.S())/eps
         
 
     # utility functions
+
+
+
     def pert_u(self, v, eps):
         Up =  [Function(self.V) for i in xrange(self.N)] 
 
         for n in xrange(self.N):
           Up[n].assign(self.np_to_coeff(self.U[n].vector().array() + eps*v.vector().array()))
+
 
         return Up
 
@@ -317,16 +307,4 @@ class CurveOpt:
         vals = interpolate(Expression(('x[0]','x[0]')), fun_space)
         return np.argsort(self.split_array(vals)[0])
 
-
-
-
-o = CurveOpt(100,100)
-
-S = o.S(o.U)
-
-o.qh()
-o.calc_dS(o.U)
-
-
-#o.plot_steps(o.Q)
 

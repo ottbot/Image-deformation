@@ -12,7 +12,5 @@ class OptEx:
         return 4*x**3 + 6*x**2 + 2*x + 3
 
 
-
-ex = OptEx()
-
-xopt = fmin_bfgs(ex.f, ex.x0, fprime=ex.fprime)
+    def opt(self):
+        return fmin_bfgs(self.f, self.x0, fprime=self.fprime)
