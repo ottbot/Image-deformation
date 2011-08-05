@@ -109,53 +109,56 @@ class TestCurveOptimizer(unittest.TestCase):
         Ax, Ay = self.split_xy_array(A)
         Bx, By = self.split_xy_array(B)
 
-        ordr = self.get_sort_order(V)        
+        plt.figure()
+        plt.plot(Ax)
+        plt.plot(Bx)
+        #ordr = self.get_sort_order(V)        
 
         # the interpolated dolfin expression should be a concatination x y vectors
         # created with numpy
-        #npt.assert_allclose(A.vector().array(), B.vector().array(), rtol=1e-10, atol=1e-12, \
+        npt.assert_allclose(A.vector().array(), B.vector().array(), rtol=1e-10, atol=1e-12, \
         #npt.assert_allclose(Ax[ordr], Bx[ordr], rtol=1e-10, atol=1e-12, \
-        #                        err_msg="Different methods of coeff init failed")
+                                err_msg="Different methods of coeff init failed")
         
 
 
-    def test_derivative(self):
-        im = Immersion(100,100)
+    # def test_derivative(self):
+    #     im = Immersion(100,100)
         
-        u = dol.Expression(('cos(x[0])','sin(x[0])'))
-        u = dol.interpolate(u, im.V)
+    #     u = dol.Expression(('cos(x[0])','sin(x[0])'))
+    #     u = dol.interpolate(u, im.V)
 
-        U = np.ones(im.mat_shape)/10
+    #     U = np.ones(im.mat_shape)/10
 
-        for n in xrange(im.N):
-            U[:,n] = u.vector().array()
-
-
-        S  = im.calc_S(U)
-        dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
-
-        vdS = 0
-
-        v = dol.Expression(('cos(x[0])','cos(x[0])'))
-        v = dol.interpolate(v, im.V)
+    #     for n in xrange(im.N):
+    #         U[:,n] = u.vector().array()
 
 
-        for dS in im.matrix_to_coeffs(dSarr):
-            vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
+    #     S  = im.calc_S(U)
+    #     dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
 
-        Up = U
+    #     vdS = 0
 
-        eps = 10e-16
+    #     v = dol.Expression(('cos(x[0])','cos(x[0])'))
+    #     v = dol.interpolate(v, im.V)
 
-        for n in xrange(im.N):
-            Up[:,n] = U[:,n] + eps*v.vector().array()
 
-        im.populated = False
-        Sp = im.calc_S(Up)
+    #     for dS in im.matrix_to_coeffs(dSarr):
+    #         vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
 
-        lim = (Sp - S)/eps
+    #     Up = U
 
-        print lim, vdS
+    #     eps = 10e-16
+
+    #     for n in xrange(im.N):
+    #         Up[:,n] = U[:,n] + eps*v.vector().array()
+
+    #     im.populated = False
+    #     Sp = im.calc_S(Up)
+
+    #     lim = (Sp - S)/eps
+
+    #     print lim, vdS
     
 
     # UTILITY FUNCTIONS
