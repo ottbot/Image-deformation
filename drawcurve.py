@@ -90,3 +90,8 @@ class DrawCurve:
          return smoothed 
 
 
+
+# ----------------------
+def get_vec(num, title = "Click and hold to draw"):
+    c = DrawCurve(num/2, title)
+    return np.append(c.xs, c.ys)

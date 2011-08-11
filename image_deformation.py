@@ -11,11 +11,11 @@ class Immersion:
     populated = False
 
 
-    def __init__(self, m = 100,n=100, deg_cont = 2, deg_dis = 1):
+    def __init__(self, m = 100,n=100, qA=None, qB=None, deg_cont = 2, deg_dis = 1):
         self.M = m # number of nodal val
         self.N = n # number of timesteps
 
-        self.dt = 1.0/n
+        self.dt = 1/10000.0 #1.0/n
 
         self.mesh = Interval(self.M, 0, 2*pi)
 
@@ -23,16 +23,27 @@ class Immersion:
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
 
         self.sigma_sq = 1
-        self.alpha_sq = 1
+        self.alpha_sq = 2
         
-        # Template
+
+        # print "------------"
+        # print np.shape(qA)
+        # print np.shape(qB)
+
         self.qA_exp = Expression(('sin(x[0])','cos(x[0])'))
         self.qA = interpolate(self.qA_exp, self.V)
 
-        # Target
+        # Template
+        # if qA is not None:
+        #     self.qA.vector()[:] = qA
+
+
         self.qB_exp = Expression(('2*sin(x[0])','3*cos(x[0])'))
         self.qB = interpolate(self.qB_exp, self.V)
-
+            
+        # Target
+        # if qB is not None:
+        #     self.qB.vector()[:] = qB
 
         
         x, y = self.mat_shape = (np.shape(self.qB.vector().array())[0], self.N)
@@ -44,19 +55,15 @@ class Immersion:
         self.Qh = [Function(self.V) for i in xrange(self.N)] 
         self.dS = [Function(self.V) for i in xrange(self.N)] 
 
-
-    def min(self):
-        U_initial = np.ones(self.mat_shape)
+    def U_initial(self):
+        U = np.ones(self.mat_shape)
 
         u = Expression(('cos(x[0])','sin(x[0])'))
         u = interpolate(u, self.V)
 
         for n in xrange(self.N):
-            U_initial[:,n] = u.vector().array()/20
+            U[:,n] = u.vector().array()
 
-
-        return fmin_bfgs(self.calc_S, U_initial, fprime=self.calc_dS, \
-                             callback=self.need_to_repopulate)
 
  
     def calc_Q(self):
@@ -83,14 +90,12 @@ class Immersion:
             
     def qh_at_t1(self):
         # Find q hat at t = 1
-        q1 = self.Q[-1]
-        qB = self.qB 
         
         p = TestFunction(self.V)
         qh1 = TrialFunction(self.V)
 
         a = dot(p,qh1)*dx
-        L = -1.0/self.sigma_sq* dot(p,q1 - qB)*dx
+        L = -1.0/self.sigma_sq * dot(p,self.Q[-1] - self.qB)*dx
 
         A = assemble(a)
         b = assemble(L)
@@ -138,7 +143,7 @@ class Immersion:
     def j(self, q):
         dq = q.dx(0)
         return  sqrt(dot(dq,dq))
-        
+    
 
     def calc_S(self, U):
         if not self.populated:
@@ -157,9 +162,12 @@ class Immersion:
         S = 0.5*S*self.dt
 
         diff = self.Qh[-1] - self.qB
-        err = assemble(inner(diff,diff)*dx)
+        
+        
+        # minimize err, and you minimize S..
+        err = (1/self.sigma_sq)*assemble(inner(diff,diff)*dx)
 
-        return S + 1/(self.sigma_sq)*err
+        return S + err
 
 
         
@@ -174,11 +182,12 @@ class Immersion:
         A = assemble(a)
 
         for n in xrange(self.N):
-            u = self.U[n]
-            j = self.j(self.Q[n])
-            qh = self.Qh[n]
+            u =  1.0*self.U[n]
+            j = 1.0*self.j(self.Q[n])
+            qh = 1.0*self.Qh[n]
 
-            L = dot(v,j*u)*dx + self.alpha_sq*dot(v.dx(0),u.dx(0))/j*dx - dot(v,qh)*dx
+
+            L = inner(v,u*j)*dx + self.alpha_sq*inner(v.dx(0),u.dx(0))/j*dx - inner(v,qh)*dx
             b = assemble(L)
 
             solve(A, self.dS[n].vector(), b)
@@ -192,7 +201,6 @@ class Immersion:
         self.populated = False
 
     def populate_arrays(self, U):
-
         self.U = self.matrix_to_coeffs(np.reshape(U, self.mat_shape))
         self.calc_Q()
         self.calc_Qh()
@@ -327,4 +335,25 @@ class Immersion:
         vals = interpolate(Expression(('x[0]','x[0]')), fun_space)
         return np.argsort(self.split_array(vals)[0])
 
+
+#------------------------
+
+def S(U, N, M):
+    im = Immersion(N, M)
+    return im.calc_S(U)
+
+def dS(U, N, M):
+    im = Immersion(N, M)
+    return im.calc_dS(U)
+
+def minimize():
+    N = 100
+    M = 10
+
+
+    im = Immersion(N,M)
+    U = np.zeros(im.mat_shape)
+
+    # TODO -- move minimizer fcn outside Immersion class. Reinitialize on each step!
+    return fmin_bfgs(S, U, fprime=dS, args=(N,M), eps=10e-10)
 

@@ -91,74 +91,86 @@ class TestCurveOptimizer(unittest.TestCase):
 
 
     def test_dolfin_coeff_init(self):
-        mesh = dol.Interval(100, 0, 2*dol.pi)
+        # mesh = dol.Interval(100, 0, 2*dol.pi)
 
-        V = dol.VectorFunctionSpace(mesh, 'CG', 2, dim=2)
+        # V = dol.VectorFunctionSpace(mesh, 'CG', 2, dim=2)
 
-        Aexp = dol.Expression(('sin(x[0])','cos(x[0])'))
-        A = dol.interpolate(Aexp, V)
+        # Aexp = dol.Expression(('sin(x[0])','cos(x[0])'))
+        # A = dol.interpolate(Aexp, V)
 
-        B = dol.Function(V)
+        # B = dol.Function(V)
         
 
-        intrvl = np.linspace(0,2*dol.pi,201)
-        x, y = np.sin(intrvl), np.cos(intrvl)
+        # intrvl = np.linspace(0,2*dol.pi,201)
+        # x, y = np.sin(intrvl), np.cos(intrvl)
 
-        B.vector()[:] = np.append(x,y)
+        # B.vector()[:] = np.append(x,y)
 
-        Ax, Ay = self.split_xy_array(A)
-        Bx, By = self.split_xy_array(B)
+        # Ax, Ay = self.split_xy_array(A)
+        # Bx, By = self.split_xy_array(B)
 
-        plt.figure()
-        plt.plot(Ax)
-        plt.plot(Bx)
-        #ordr = self.get_sort_order(V)        
+        # plt.figure()
+        # plt.plot(Ax)
+        # plt.plot(Bx)
+        # #ordr = self.get_sort_order(V)        
 
-        # the interpolated dolfin expression should be a concatination x y vectors
-        # created with numpy
-        npt.assert_allclose(A.vector().array(), B.vector().array(), rtol=1e-10, atol=1e-12, \
-        #npt.assert_allclose(Ax[ordr], Bx[ordr], rtol=1e-10, atol=1e-12, \
-                                err_msg="Different methods of coeff init failed")
+        # # the interpolated dolfin expression should be a concatination x y vectors
+        # # created with numpy
+        # npt.assert_allclose(A.vector().array(), B.vector().array(), rtol=1e-10, atol=1e-12, \
+        # #npt.assert_allclose(Ax[ordr], Bx[ordr], rtol=1e-10, atol=1e-12, \
+        #                         err_msg="Different methods of coeff init failed")
+        pass
+
+
+    def test_derivative(self):
+        im = Immersion(100,2)
+        
+        u = dol.Expression(('cos(x[0])','sin(x[0])'))
+        u = dol.interpolate(u, im.V)
+
+        U = np.ones(im.mat_shape)
+
+        for n in xrange(im.N):
+            U[:,n] = 0.0 * u.vector().array()
+
+        S  = im.calc_S(U)
+        
+        dSs = im.calc_dS(U)
+        dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
+        #im.calc_dS(U)
+        vdS = 0
+
+        v = dol.Expression(('cos(x[0])','cos(x[0])'))
+        
+        v = dol.interpolate(v, im.V)
+
+
+        for dS in im.matrix_to_coeffs(dSarr):
+            vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
+
+
+
+        lims = []
+        Ss = []
+        Sps = []
+        #eps = np.array([10**(-n) for n in np.linspace(0,20,20)])
+        eps = 10.**(-sp.arange(10))
         
 
-
-    # def test_derivative(self):
-    #     im = Immersion(100,100)
-        
-    #     u = dol.Expression(('cos(x[0])','sin(x[0])'))
-    #     u = dol.interpolate(u, im.V)
-
-    #     U = np.ones(im.mat_shape)/10
-
-    #     for n in xrange(im.N):
-    #         U[:,n] = u.vector().array()
-
-
-    #     S  = im.calc_S(U)
-    #     dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
-
-    #     vdS = 0
-
-    #     v = dol.Expression(('cos(x[0])','cos(x[0])'))
-    #     v = dol.interpolate(v, im.V)
+        for ep in eps:
+            im = Immersion(100,2)
+            Up = np.zeros(im.mat_shape)
+            for n in xrange(im.N):
+                Up[:,n] = U[:,n] + ep*v.vector().array()
+                
+            Sp = im.calc_S(Up)
+            Ss.append(S)
+            Sps.append(Sp)
+            lims.append((Sp - S)/ep)
 
 
-    #     for dS in im.matrix_to_coeffs(dSarr):
-    #         vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
-
-    #     Up = U
-
-    #     eps = 10e-16
-
-    #     for n in xrange(im.N):
-    #         Up[:,n] = U[:,n] + eps*v.vector().array()
-
-    #     im.populated = False
-    #     Sp = im.calc_S(Up)
-
-    #     lim = (Sp - S)/eps
-
-    #     print lim, vdS
+        for n in xrange(len(eps)):
+            print eps[n],"-- \t",lims[n],"\t", vdS, "\tS: ", Ss[n],"\tSp: ",Sps[n]
     
 
     # UTILITY FUNCTIONS
