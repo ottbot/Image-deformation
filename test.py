@@ -141,20 +141,16 @@ class TestCurveOptimizer(unittest.TestCase):
         vdS = 0
 
         v = dol.Expression(('cos(x[0])','cos(x[0])'))
-        
         v = dol.interpolate(v, im.V)
 
 
         for dS in im.matrix_to_coeffs(dSarr):
             vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
 
-
-
         lims = []
         Ss = []
         Sps = []
-        #eps = np.array([10**(-n) for n in np.linspace(0,20,20)])
-        eps = 10.**(-sp.arange(10))
+        eps = 10.**(-sp.arange(15))
         
 
         for ep in eps:
@@ -168,9 +164,12 @@ class TestCurveOptimizer(unittest.TestCase):
             Sps.append(Sp)
             lims.append((Sp - S)/ep)
 
-
+        print "%s %15s %12s %12s %12s" % ("Eps","RHS","LHS","S","Sp")
         for n in xrange(len(eps)):
-            print eps[n],"-- \t",lims[n],"\t", vdS, "\tS: ", Ss[n],"\tSp: ",Sps[n]
+            print "%.0e  %15.6f  %12.6f  %12.5f  %12.5f" % \
+                (eps[n], lims[n], vdS, Ss[n], Sps[n])
+
+            #print eps[n],"-- \t",lims[n],"\t", vdS, "\tS: ", Ss[n],"\tSp: ",Sps[n]
     
 
     # UTILITY FUNCTIONS

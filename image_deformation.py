@@ -15,15 +15,15 @@ class Immersion:
         self.M = m # number of nodal val
         self.N = n # number of timesteps
 
-        self.dt = 1/10000.0 #1.0/n
+        self.dt = 1./n
 
         self.mesh = Interval(self.M, 0, 2*pi)
 
         self.dV = VectorFunctionSpace(self.mesh, 'DG', deg_cont - 1, dim=2)
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
 
-        self.sigma_sq = 1
-        self.alpha_sq = 2
+        self.sigma_sq = 1 #10.0
+        self.alpha_sq = 1 #0.1
         
 
         # print "------------"
@@ -67,23 +67,23 @@ class Immersion:
 
  
     def calc_Q(self):
-        q_prev = self.qA
+        q = self.qA
 
         r = TestFunction(self.V)
-        q = TrialFunction(self.V)
+        q_next = TrialFunction(self.V)
 
-        a = dot(r,q)*dx
+        a = dot(r,q_next)*dx
         A = assemble(a)        
 
-        q = Function(self.V)   # the unknown at a new time level
+        q_next = Function(self.V)   # the unknown at a new time level
 
         for n in xrange(self.N):
-            L = dot(q_prev,r)*dx -  self.dt*dot(r,self.U[n])*dx
+            L = dot(q, r)*dx -  self.dt*dot(r,self.U[n])*dx
             b = assemble(L)
 
-            solve(A, q.vector(), b)
+            solve(A, q_next.vector(), b)
 
-            q_prev.assign(q)
+            q.assign(q_next)
 
             self.Q[n].assign(q)
 
@@ -127,7 +127,7 @@ class Immersion:
             j = self.j(q)
 
             c = .5*dot(u,u)/j - \
-                (self.alpha_sq/2.0)*dot(u.dx(0),u.dx(0))/dot(q.dx(0),q.dx(0))
+                (self.alpha_sq/2.)*dot(u.dx(0),u.dx(0))/dot(q.dx(0),q.dx(0))
 
             L = dot(p,qh)*dx - c*dot(p.dx(0),qh.dx(0))*self.dt*dx
             
@@ -152,7 +152,7 @@ class Immersion:
         S = 0
 
         for n in xrange(self.N):
-            j = self.j(self.Q[n])
+            j = 1.0*self.j(self.Q[n])
 
             a = (dot(self.U[n],self.U[n])*j)*dx \
                 + .5*(self.alpha_sq*dot(self.U[n].dx(0), self.U[n].dx(0))/j)*dx
@@ -223,6 +223,10 @@ class Immersion:
 
         return C
 
+    def plot_qAqB(self):
+        plt.figure()
+        plt.plot(
+
     def plot_steps(self):
         plt.ion()
         plt.figure()
@@ -269,8 +273,7 @@ class Immersion:
         i *= self.dt
 
         print "sum: ", i
-        
-        
+                
 
         # calculate the the value of the limit as eps at 1e-10 to 1e-20
         eps = np.array([10**(-n) for n in np.linspace(10.0,17,10)])
@@ -291,20 +294,10 @@ class Immersion:
         #    var += assemble(dot(self.dS[n], v)*dx)
 
 
-        
-        #lim (S[u + eps*v] - S[u])/eps
-        # but: S[u +eps*v] = S[u] + eps*<dU/dS,v>
-        # so just return <dU/dS, v>
-        #return (eps*var)/eps
-
-                           
-
         return (self.S(self.pert_u(v,eps)) - self.S())/eps
         
 
     # utility functions
-
-
 
     def pert_u(self, v, eps):
         Up =  [Function(self.V) for i in xrange(self.N)] 
@@ -355,5 +348,5 @@ def minimize():
     U = np.zeros(im.mat_shape)
 
     # TODO -- move minimizer fcn outside Immersion class. Reinitialize on each step!
-    return fmin_bfgs(S, U, fprime=dS, args=(N,M), eps=10e-10)
+    return fmin_bfgs(S, U, fprime=dS, args=(N,M)) #, eps=10e-10)
 

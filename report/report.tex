@@ -1,0 +1,138 @@
+\documentclass[a4paper, 10pt]{article}
+
+
+\usepackage{amsmath}
+%\usepackage{vector}
+
+\newcommand{\eq}[1]{Eq. \ref{eq:#1}}
+\newcommand{\vect}[1]{\ensuremath{\underline{#1}}}
+\newcommand{\hvect}[1]{\ensuremath{\hat{\vect{#1}}}}
+
+
+\setlength{\parskip}{.3cm}
+
+\begin{document}
+
+
+\begin{align*}
+  \vect q(s) &= 0 \leq s \leq 2\pi \\
+  \vect q(0) &= \vect q(2\pi)
+\end{align*}
+
+\begin{equation}
+  \label{eq:q}
+  \vect Q(s,t)
+\end{equation}
+
+Parameterisation invariant..
+
+
+The template $\vect q_A$ is the curve at $t=0$, and the target $\vect q_B$
+is the curve at $t=1$. The scheme finds a velocity $\vect u(s)$ to minimize
+distance between the two curves. A BFGS algorithm is used to find the minimal
+functional $S[u]$,
+\begin{equation}
+  \label{eq:S}
+  S = \frac{1}{2} \int^{1}_{t=0} \int^{2\pi}_{s=0}\left[ \left| \vect u(s,t) \right|^2 
+  \left| \frac{\partial \vect q}{\partial s} \right|^2  + 
+  \alpha^2 \frac{ 
+    \left| \frac{\partial \vect u}{\partial s}\right|^2}{
+    \left| \frac{\partial \vect q}{\partial s}\right|}\right]  \,ds\,dt
+  + \frac{1}{\sigma^2}\int^{2\pi}_{s=0}\left| q(s,1) - q_B(s)\right|^2\,ds.
+\end{equation}
+Subject to
+\begin{subequations}
+\begin{equation}
+  \vect q_A(s) =\vect q(s,0)   \label{eq:template}
+\end{equation}
+\begin{equation}
+  \vect q_B(s) = \vect q(s,1) \label{eq:target}
+\end{equation}
+\begin{equation}
+  \frac{\partial \vect q}{\partial t}(s,t) = \vect u(s,t)  \label{eq:dqdt}
+\end{equation}
+\end{subequations}
+where $\alpha$ is dependent on the mesh size ????, and $\sigma$ controls the importance
+of error term $\left| q(s,1) - q_B(s)\right|^2$.
+
+
+Given a velocity $\vect u(s,t)$, the scheme first finds the vector $\vect q$ at
+each time step from $t=0$ to $t=1$. \eq{dqdt} is discretized using a forward finite difference
+\begin{equation}
+  \label{eq:fd_q}
+  \frac{\vect q(s)^{n+1}- \vect q(s)^n}{\Delta t} = \vect u(s).
+\end{equation}
+Using a test function $\vect r(s)$, \eq{df_q_test} is solved for $\vect q^{n+1}$
+at each time step.
+  \begin{equation}
+    \label{eq:df_q_test}
+    \int \vect{r}(s) \cdot \vect{q}^{n+1}(s)\, ds = \int \vect{r}(s) \cdot
+    \vect{q}^n (s)\,ds + \Delta t \int \vect{r}(s)\cdot \vect{v}(s)\, ds
+  \end{equation}
+
+
+
+The variational derivative $\frac{\delta S}{\delta \vect u}$ is need to improve
+the performance of the optimiser. 
+
+For a single timestep, the variational derivative can be found with the equation
+\begin{equation}
+  \label{eq:dsdu}
+  \langle \vect v, \frac{\delta S}{\delta \vect u}\rangle =
+  \langle \vect v, \left| \frac{\partial \vect q}{\partial s}\right |\rangle 
+  + \alpha^2 \langle \frac{\partial \vect v}{\partial s},
+  \frac{\frac{\partial \vect v}{\partial s} }{ \left|\frac{\partial \vect q}{\partial s}\right|}
+\rangle - \langle \vect v, \hvect{q} \rangle,
+\end{equation}
+where $\vect v$ is a test function, and $\hvect q$ is  ???
+
+For each time step, $\hvect q$ is found using backwards finite difference method
+where $\hvect q(s,1)$ is found by
+\begin{equation}
+  \label{eq:qh1}
+  \langle \hvect p, \hvect q(s,1) \rangle = - \frac{1}{\sigma^2}
+  \langle \hvect p, \vect q(s,1) - q_B \rangle
+\end{equation}
+where $\hvect p$ is a test function.
+
+
+\begin{equation}
+  \label{eq:dqhdt}
+  \langle \hvect p, \frac{\partial \hvect q}{\partial t} \rangle =
+  \langle
+  \left( 
+    \frac{1}{2}
+    \frac{ 
+      \left| \vect u \right|^2}{
+      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+    +
+    \frac{\alpha^2}{2}
+    \frac{ 
+      \left| \frac{\partial \vect u}{\partial s}\right|^2}{
+      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+  \right)\frac{\partial \hvect p}{\partial s}, \frac{\partial \hvect q}{\partial s} \rangle
+\end{equation}
+Substituting $\frac{\partial \hvect q}{\partial t}$ with a backwards finite difference and
+rearranging \eq{dqhdt},
+\begin{equation}
+  \label{eq:fd_qh}
+  \int \hvect p \cdot \vect q^n \,ds = \int \hvect p \cdot \vect q^{n+1} \,ds
+  +
+   \left( 
+    \frac{1}{2}
+    \frac{ 
+      \left| \vect u \right|^2}{
+      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+    +
+    \frac{\alpha^2}{2}
+    \frac{ 
+      \left| \frac{\partial \vect u}{\partial s}\right|^2}{
+      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+  \right) \int \frac{ \partial \hvect p}{\partial s} 
+  \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
+\end{equation}
+which is solved for $q^n$ at each timestep.
+
+
+
+\end{document}
