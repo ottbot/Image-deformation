@@ -128,7 +128,7 @@ class TestCurveOptimizer(unittest.TestCase):
         u = dol.Expression(('cos(x[0])','sin(x[0])'))
         u = dol.interpolate(u, im.V)
 
-        U = np.ones(im.mat_shape)
+        U = np.zeros(im.mat_shape)
 
         for n in xrange(im.N):
             U[:,n] = 0.0 * u.vector().array()
@@ -157,7 +157,7 @@ class TestCurveOptimizer(unittest.TestCase):
             im = Immersion(100,2)
             Up = np.zeros(im.mat_shape)
             for n in xrange(im.N):
-                Up[:,n] = U[:,n] + ep*v.vector().array()
+                Up[:,n] = 0.0*u.vector().array() + ep*v.vector().array()
                 
             Sp = im.calc_S(Up)
             Ss.append(S)

@@ -2,5 +2,7 @@
 /.DS_Store
 /image_deformation.pyc
 *.pyc
-*~
 #*#
+*.aux
+*.log
+report.pdf

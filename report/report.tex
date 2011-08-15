@@ -5,7 +5,7 @@
 %\usepackage{vector}
 
 \newcommand{\eq}[1]{Eq. \ref{eq:#1}}
-\newcommand{\vect}[1]{\ensuremath{\underline{#1}}}
+\newcommand{\vect}[1]{\ensuremath{\mathbf{#1}}}
 \newcommand{\hvect}[1]{\ensuremath{\hat{\vect{#1}}}}
 
 
@@ -19,10 +19,6 @@
   \vect q(0) &= \vect q(2\pi)
 \end{align*}
 
-\begin{equation}
-  \label{eq:q}
-  \vect Q(s,t)
-\end{equation}
 
 Parameterisation invariant..
 
@@ -34,7 +30,7 @@ functional $S[u]$,
 \begin{equation}
   \label{eq:S}
   S = \frac{1}{2} \int^{1}_{t=0} \int^{2\pi}_{s=0}\left[ \left| \vect u(s,t) \right|^2 
-  \left| \frac{\partial \vect q}{\partial s} \right|^2  + 
+  \left| \frac{\partial \vect q}{\partial s} \right|  + 
   \alpha^2 \frac{ 
     \left| \frac{\partial \vect u}{\partial s}\right|^2}{
     \left| \frac{\partial \vect q}{\partial s}\right|}\right]  \,ds\,dt
@@ -52,7 +48,7 @@ Subject to
   \frac{\partial \vect q}{\partial t}(s,t) = \vect u(s,t)  \label{eq:dqdt}
 \end{equation}
 \end{subequations}
-where $\alpha$ is dependent on the mesh size ????, and $\sigma$ controls the importance
+where $\alpha$ is dependent on the mesh size ????, and $\sigma$ is the weighing
 of error term $\left| q(s,1) - q_B(s)\right|^2$.
 
 
@@ -84,7 +80,7 @@ For a single timestep, the variational derivative can be found with the equation
   \frac{\frac{\partial \vect v}{\partial s} }{ \left|\frac{\partial \vect q}{\partial s}\right|}
 \rangle - \langle \vect v, \hvect{q} \rangle,
 \end{equation}
-where $\vect v$ is a test function, and $\hvect q$ is  ???
+where $\vect v$ is a test function, and $\hvect q$ is a Lagrange multiplier (SHOW..)
 
 For each time step, $\hvect q$ is found using backwards finite difference method
 where $\hvect q(s,1)$ is found by
@@ -104,7 +100,7 @@ where $\hvect p$ is a test function.
     \frac{1}{2}
     \frac{ 
       \left| \vect u \right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+      \left| \frac{\partial \vect q}{\partial s}\right|}
     +
     \frac{\alpha^2}{2}
     \frac{ 
@@ -117,21 +113,21 @@ rearranging \eq{dqhdt},
 \begin{equation}
   \label{eq:fd_qh}
   \int \hvect p \cdot \vect q^n \,ds = \int \hvect p \cdot \vect q^{n+1} \,ds
-  +
+  + \int
    \left( 
     \frac{1}{2}
     \frac{ 
       \left| \vect u \right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+      \left| \frac{\partial \vect q}{\partial s}\right|}
     +
     \frac{\alpha^2}{2}
     \frac{ 
       \left| \frac{\partial \vect u}{\partial s}\right|^2}{
       \left| \frac{\partial \vect q}{\partial s}\right|^2}
-  \right) \int \frac{ \partial \hvect p}{\partial s} 
+  \right) \frac{ \partial \hvect p}{\partial s} 
   \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
 \end{equation}
-which is solved for $q^n$ at each timestep.
+is solved for $q^n$ at each timestep.
 
 
 

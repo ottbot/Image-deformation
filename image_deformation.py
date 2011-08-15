@@ -4,6 +4,8 @@ import scipy as sp
 from scipy.optimize import fmin_bfgs
 import matplotlib.pylab as plt
 
+
+
 class Immersion:
 
     # flag to test if the arrays of U,Q, Qh need to be populated
@@ -23,7 +25,7 @@ class Immersion:
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
 
         self.sigma_sq = 1 #10.0
-        self.alpha_sq = 1 #0.1
+        self.alpha_sq = 0.01 #0.1
         
 
         # print "------------"
@@ -38,7 +40,7 @@ class Immersion:
         #     self.qA.vector()[:] = qA
 
 
-        self.qB_exp = Expression(('2*sin(x[0])','3*cos(x[0])'))
+        self.qB_exp = Expression(('1.5*sin(x[0])','.3*cos(x[0])'))
         self.qB = interpolate(self.qB_exp, self.V)
             
         # Target
@@ -155,8 +157,8 @@ class Immersion:
             j = 1.0*self.j(self.Q[n])
 
             a = (dot(self.U[n],self.U[n])*j)*dx \
-                + .5*(self.alpha_sq*dot(self.U[n].dx(0), self.U[n].dx(0))/j)*dx
-            #S += .5*assemble(energy_norm(a,U[n]))*self.dt
+                + (self.alpha_sq*dot(self.U[n].dx(0), self.U[n].dx(0))/j)*dx
+
             S += assemble(a)
 
         S = 0.5*S*self.dt
@@ -165,7 +167,7 @@ class Immersion:
         
         
         # minimize err, and you minimize S..
-        err = (1/self.sigma_sq)*assemble(inner(diff,diff)*dx)
+        err = (1/(self.sigma_sq))*assemble(inner(diff,diff)*dx)
 
         return S + err
 
@@ -182,9 +184,9 @@ class Immersion:
         A = assemble(a)
 
         for n in xrange(self.N):
-            u =  1.0*self.U[n]
-            j = 1.0*self.j(self.Q[n])
-            qh = 1.0*self.Qh[n]
+            u =  self.U[n]
+            j = self.j(self.Q[n])
+            qh = self.Qh[n]
 
 
             L = inner(v,u*j)*dx + self.alpha_sq*inner(v.dx(0),u.dx(0))/j*dx - inner(v,qh)*dx
@@ -225,7 +227,10 @@ class Immersion:
 
     def plot_qAqB(self):
         plt.figure()
-        plt.plot(
+        plt.axis('equal')
+        plt.plot(*self.split_array(self.qA))
+        plt.plot(*self.split_array(self.qB))
+        plt.show()
 
     def plot_steps(self):
         plt.ion()
@@ -249,64 +254,7 @@ class Immersion:
             plt.draw()
 
 
-
-    def test(self, eps = 1e-10):
-        v0 = TestFunction(self.V)
-
-        dS0 = TrialFunction(self.V)
-
-        a = dot(v0,dS0)*dx
-        
-        v = Expression(('cos(x[0])','cos(x[0])'))
-        v = interpolate(v, self.V)
-
-        i = 0
-
-        for n in xrange(self.N):
-            dS = self.dS[n]
-
-            frm = action(action(a,v), dS)
-            x = assemble(frm)
-
-            i += x
-
-        i *= self.dt
-
-        print "sum: ", i
-                
-
-        # calculate the the value of the limit as eps at 1e-10 to 1e-20
-        eps = np.array([10**(-n) for n in np.linspace(10.0,17,10)])
-        lims = np.array([self.derivative_from_limit(v, x) for x in eps])
-
-
-        #plt.figure()
-        #plt.plot(lims/i)
-
-        for l in lims:
-            print "limit: ",l, 'solver: ', i
-
-    def derivative_from_limit(self,v, eps = 1e-10):
-        #S = self.S()
-
-        #var = 0
-        #for n in xrange(self.N):
-        #    var += assemble(dot(self.dS[n], v)*dx)
-
-
-        return (self.S(self.pert_u(v,eps)) - self.S())/eps
-        
-
     # utility functions
-
-    def pert_u(self, v, eps):
-        Up =  [Function(self.V) for i in xrange(self.N)] 
-
-        for n in xrange(self.N):
-          Up[n].assign(self.np_to_coeff(self.U[n].vector().array() + eps*v.vector().array()))
-
-
-        return Up
 
     def np_to_coeff(self,arr):
         f = Function(self.V)
@@ -339,14 +287,34 @@ def dS(U, N, M):
     im = Immersion(N, M)
     return im.calc_dS(U)
 
+
 def minimize():
     N = 100
-    M = 10
+    M = 50
 
+    callbacks = 0
+
+    def plot_q(U):
+        #if not callbacks % 10:
+        #im = Immersion(100,10)
+        #im.calc_S(U)
+        #im.plot_steps()
+
+        print "--------> ", np.shape(U)
+        #callbacks += 1
+
+        
 
     im = Immersion(N,M)
     U = np.zeros(im.mat_shape)
 
-    # TODO -- move minimizer fcn outside Immersion class. Reinitialize on each step!
-    return fmin_bfgs(S, U, fprime=dS, args=(N,M)) #, eps=10e-10)
+
+
+    opt = fmin_bfgs(S, U, fprime=dS, args=(N,M), epsilon=10e-10)#, callback=plot_q)
+
+
+    return [opt, im]
+
+
+        
 
