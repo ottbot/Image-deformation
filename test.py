@@ -15,14 +15,15 @@ class TestCurveOptimizer(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.M = 100
-        mesh = dol.Interval(self.M, 0, 2*np.pi)
+        self.mesh = dol.Interval(self.M, 0, 2*np.pi)
 
-        V = dol.FunctionSpace(mesh, 'CG', 1)
+        V = dol.FunctionSpace(self.mesh, 'CG', 1)
 
         exp = dol.Expression("sin(x[0])")
 
         self.dolf_sin = dol.interpolate(exp, V)
         self.np_sin = np.sin(np.linspace(0,2*np.pi, self.M + 1))
+        self.np_cos = np.cos(np.linspace(0,2*np.pi, self.M + 1))
 
         
 
@@ -76,17 +77,37 @@ class TestCurveOptimizer(unittest.TestCase):
 
 
 
-    # def test_jacobian(self):
-    #     dolf_j = dol.dot(self.dolf_sin.dx(0), self.dolf_sin.dx(0))
+    def test_jacobian(self):
+        dolf_j = dol.inner(self.dolf_sin.dx(0), self.dolf_sin.dx(0))
 
-    #     print dol.assemble(dolf_j*dol.dx)
+        V = dol.FunctionSpace(self.mesh, 'CG', 1)
+        pj = dol.project(dolf_j, V)
 
+        coeffs = pj.vector().array()
+        
+        dj = np.sqrt(np.sum(coeffs))
 
-    # def test_dolf_derivates(self):
-    #     dsin = self.dolf_sin
+        nj = np.sqrt(np.dot(self.np_cos,self.np_cos))
+        
+        f = self.dolf_sin
 
-    #     npt.assert_allclose(-dsin.vector().array(), dsin.dx(0).dx(0).vector().array(), rtol=1e-2, atol=1e-2, \
-    #                              err_msg="Second derivative of sin(x) is not -sin(x)")
+        dola = dol.assemble(dol.inner(f,f*dj)*dol.dx)
+        npa  = dol.assemble(dol.inner(f,f*nj)*dol.dx)
+
+        # Again.. not totally close!
+        npt.assert_allclose(dola, npa, rtol=1e-2, atol=1e-2)
+
+    def test_dolf_derivatives(self):
+        fsin = self.dolf_sin
+
+        dfsin = fsin.dx(0)
+        
+        V = dol.FunctionSpace(self.mesh, 'CG', 1)
+
+        dfsin = dol.project(dfsin, V)
+
+        npt.assert_allclose(self.np_cos, dfsin.vector().array(), rtol=1e-2, atol=1e-2, \
+                                 err_msg="derivative of sin(x) is not cos(x)")
 
 
 
@@ -121,55 +142,135 @@ class TestCurveOptimizer(unittest.TestCase):
         #                         err_msg="Different methods of coeff init failed")
         pass
 
+    def test_template_target_does_not_change(self):
+        im = Immersion(100,10)
+        
+        qA = 1.0*im.qA.vector().array()
+        qB = 1.0*im.qA.vector().array()
+
+        U = 0.1*np.ones(im.mat_shape)
+
+        im.calc_S(U)
+
+        npt.assert_allclose(qA, im.qA.vector().array(), rtol=1e-10, atol=1e-12, 
+                            err_msg="qA changes after calculating S!!")
+        npt.assert_allclose(qB, im.qA.vector().array(), rtol=1e-10, atol=1e-12,
+                                err_msg="qA changes after calculating S!!")
+        
+
+    def test_matrix_to_coeff_conversion(self):
+        im = Immersion(50,50)
+        
+        U = np.random.rand(*im.mat_shape)
+
+        Uc = im.matrix_to_coeffs(U)
+
+        U2 = im.coeffs_to_matrix(Uc)
+
+
+        for n in xrange(50):
+            npt.assert_allclose(np.sum(U[:,n]), np.sum(Uc[n].vector().array()), 
+                                rtol=1e-10, atol=1e-12)
+            
+
+        npt.assert_allclose(U, U2, rtol=1e-10, atol=1e-12)
+
+    def test_dS_reshape(self):
+        im = Immersion(50,50)
+
+        U = np.zeros(im.mat_shape)
+
+        dSv = im.calc_dS(U)
+
+        dSm = np.reshape(dSv, im.mat_shape)
+        
+        for n in xrange(50):
+            npt.assert_allclose(dSm[:,n],im.dS[n].vector().array(), 
+                                rtol=1e-10, atol=1e-12)
+
+
+    def test_mass_matrix_mult(self):
+        im = Immersion(100,10)
+
+        v = dol.TestFunction(im.V)
+        u = dol.TrialFunction(im.V)
+        
+        a = dol.inner(v,u)*dol.dx
+        A = dol.assemble(a)
+
+        q = im.qA
+
+        u1 = dol.Function(im.V)
+        u2 = dol.Function(im.V)
+
+        g = A*q.vector()
+        f = dol.Function(im.V, g)
+
+        u1.assign(f)
+
+        u2.vector()[:] = A * q.vector().array()
+
+        npt.assert_allclose(u1.vector().array(),u2.vector().array(), 
+                                rtol=1e-10, atol=1e-12)
+        
+                     
 
     def test_derivative(self):
-        im = Immersion(100,2)
+        N = 3
+        M = 100
+
+        im = Immersion(M,N)
         
-        u = dol.Expression(('cos(x[0])','sin(x[0])'))
+        u = dol.Expression(('cos(x[0])/5.0','sin(x[0])/5.0'))
+        #u = dol.Expression(('0.1','0.1'))
         u = dol.interpolate(u, im.V)
 
         U = np.zeros(im.mat_shape)
 
         for n in xrange(im.N):
-            U[:,n] = 0.0 * u.vector().array()
+            U[:,n] = 1.0*u.vector().array()
 
         S  = im.calc_S(U)
         
-        dSs = im.calc_dS(U)
         dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
-        #im.calc_dS(U)
+
         vdS = 0
 
-        v = dol.Expression(('cos(x[0])','cos(x[0])'))
+        #v = dol.Expression(('cos(x[0])/2.0','cos(x[0])/2.0'))
+        v = dol.Expression(('pow(x[0],2)/3.0','pow(x[0],2)/3.0'))
         v = dol.interpolate(v, im.V)
 
 
         for dS in im.matrix_to_coeffs(dSarr):
-            vdS += dol.assemble(dol.dot(v,dS)*dol.dx)*im.dt
+            vdS += dol.assemble(dol.inner(v,dS)*dol.dx)
+
+        vdS *= im.dt
+
+
 
         lims = []
         Ss = []
         Sps = []
-        eps = 10.**(-sp.arange(15))
+        eps = 10.**(-sp.arange(20))
         
 
         for ep in eps:
-            im = Immersion(100,2)
+            im = Immersion(M,N)
             Up = np.zeros(im.mat_shape)
             for n in xrange(im.N):
-                Up[:,n] = 0.0*u.vector().array() + ep*v.vector().array()
+                Up[:,n] = 1.0*u.vector().array() + ep*v.vector().array()
+
                 
             Sp = im.calc_S(Up)
             Ss.append(S)
             Sps.append(Sp)
             lims.append((Sp - S)/ep)
 
-        print "%s %15s %12s %12s %12s" % ("Eps","RHS","LHS","S","Sp")
+        print "%s %15s %12s %12s %15s %15s" % ("Eps","LHS","RHS","S","Sp", "Sp - S")
         for n in xrange(len(eps)):
-            print "%.0e  %15.6f  %12.6f  %12.5f  %12.5f" % \
-                (eps[n], lims[n], vdS, Ss[n], Sps[n])
+            print "%.0e  %15.6f  %12.6f  %12.7f  %12.7f %12.7f" % \
+                (eps[n], vdS, lims[n], Ss[n], Sps[n], Sps[n] - Ss[n])
 
-            #print eps[n],"-- \t",lims[n],"\t", vdS, "\tS: ", Ss[n],"\tSp: ",Sps[n]
     
 
     # UTILITY FUNCTIONS

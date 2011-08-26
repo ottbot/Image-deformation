@@ -8,6 +8,7 @@
 \newcommand{\vect}[1]{\ensuremath{\mathbf{#1}}}
 \newcommand{\hvect}[1]{\ensuremath{\hat{\vect{#1}}}}
 
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
 
 \setlength{\parskip}{.3cm}
 
@@ -27,14 +28,17 @@ The template $\vect q_A$ is the curve at $t=0$, and the target $\vect q_B$
 is the curve at $t=1$. The scheme finds a velocity $\vect u(s)$ to minimize
 distance between the two curves. A BFGS algorithm is used to find the minimal
 functional $S[u]$,
+
+a metric, such that the dq/ds ensures is parameterisation invariant -- and non zero!
+
 \begin{equation}
   \label{eq:S}
-  S = \frac{1}{2} \int^{1}_{t=0} \int^{2\pi}_{s=0}\left[ \left| \vect u(s,t) \right|^2 
+  S = \frac{1}{2} \int^{1}_{t=0} \int^{2\pi}_{s=0}\left( \left| \vect u(s,t) \right|^2 
   \left| \frac{\partial \vect q}{\partial s} \right|  + 
   \alpha^2 \frac{ 
     \left| \frac{\partial \vect u}{\partial s}\right|^2}{
-    \left| \frac{\partial \vect q}{\partial s}\right|}\right]  \,ds\,dt
-  + \frac{1}{\sigma^2}\int^{2\pi}_{s=0}\left| q(s,1) - q_B(s)\right|^2\,ds.
+    \left| \frac{\partial \vect q}{\partial s}\right|}\right)  \,ds\,dt
+  + \frac{1}{2\sigma^2}\int^{2\pi}_{s=0}\left| q(s,1) - q_B(s)\right|^2\,ds.
 \end{equation}
 Subject to
 \begin{subequations}
@@ -42,14 +46,12 @@ Subject to
   \vect q_A(s) =\vect q(s,0)   \label{eq:template}
 \end{equation}
 \begin{equation}
-  \vect q_B(s) = \vect q(s,1) \label{eq:target}
-\end{equation}
-\begin{equation}
   \frac{\partial \vect q}{\partial t}(s,t) = \vect u(s,t)  \label{eq:dqdt}
 \end{equation}
 \end{subequations}
 where $\alpha$ is dependent on the mesh size ????, and $\sigma$ is the weighing
 of error term $\left| q(s,1) - q_B(s)\right|^2$.
+
 
 
 Given a velocity $\vect u(s,t)$, the scheme first finds the vector $\vect q$ at
@@ -75,7 +77,7 @@ For a single timestep, the variational derivative can be found with the equation
 \begin{equation}
   \label{eq:dsdu}
   \langle \vect v, \frac{\delta S}{\delta \vect u}\rangle =
-  \langle \vect v, \left| \frac{\partial \vect q}{\partial s}\right |\rangle 
+  \langle \vect v, \vect u \left| \frac{\partial \vect q}{\partial s}\right |\rangle 
   + \alpha^2 \langle \frac{\partial \vect v}{\partial s},
   \frac{\frac{\partial \vect v}{\partial s} }{ \left|\frac{\partial \vect q}{\partial s}\right|}
 \rangle - \langle \vect v, \hvect{q} \rangle,
@@ -94,36 +96,37 @@ where $\hvect p$ is a test function.
 
 \begin{equation}
   \label{eq:dqhdt}
-  \langle \hvect p, \frac{\partial \hvect q}{\partial t} \rangle =
-  \langle
-  \left( 
-    \frac{1}{2}
-    \frac{ 
-      \left| \vect u \right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|}
-    +
-    \frac{\alpha^2}{2}
-    \frac{ 
-      \left| \frac{\partial \vect u}{\partial s}\right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|^2}
-  \right)\frac{\partial \hvect p}{\partial s}, \frac{\partial \hvect q}{\partial s} \rangle
+  \left\langle \hat{p},\pp{\hat{q}}{t}\right\rangle = \left\langle \frac{1}{2}\left(
+      \frac{|u|^2}{\left|\pp{q}{s}\right|}
+      -\alpha^2\frac{\left|\pp{u}{s}\right|^2}{\left|\pp{q}{s}\right|^3}\right)
+    \pp{\hat{p}}{s},\pp{\hat{q}}{s}\right\rangle 
 \end{equation}
+
+
+  % \langle \hvect p, \frac{\partial \hvect q}{\partial t} \rangle =
+  % \langle
+  % \left( 
+  %   \frac{1}{2}
+  %   \frac{ 
+  %     \left| \vect u \right|^2}{
+  %     \left| \frac{\partial \vect q}{\partial s}\right|}
+  %   +
+  %   \frac{\alpha^2}{2}
+  %   \frac{ 
+  %     \left| \frac{\partial \vect u}{\partial s}\right|^2}{
+  %     \left| \frac{\partial \vect q}{\partial s}\right|^2}
+  % \right)\frac{\partial \hvect p}{\partial s}, \frac{\partial \hvect q}{\partial s} \rangle
+
+
 Substituting $\frac{\partial \hvect q}{\partial t}$ with a backwards finite difference and
 rearranging \eq{dqhdt},
 \begin{equation}
   \label{eq:fd_qh}
-  \int \hvect p \cdot \vect q^n \,ds = \int \hvect p \cdot \vect q^{n+1} \,ds
+  \int \hvect p \cdot \hvect q^n \,ds = \int \hvect p \cdot \hvect q^{n+1} \,ds
   + \int
    \left( 
-    \frac{1}{2}
-    \frac{ 
-      \left| \vect u \right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|}
-    +
-    \frac{\alpha^2}{2}
-    \frac{ 
-      \left| \frac{\partial \vect u}{\partial s}\right|^2}{
-      \left| \frac{\partial \vect q}{\partial s}\right|^2}
+      \frac{|u|^2}{\left|\pp{vect q}{s}\right|}
+      -\alpha^2\frac{\left|\pp{u}{s}\right|^2}{\left|\pp{q}{s}\right|^3}
   \right) \frac{ \partial \hvect p}{\partial s} 
   \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
 \end{equation}
