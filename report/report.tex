@@ -1,4 +1,4 @@
-\documentclass[a4paper, 10pt]{article}
+\documentclass[a4paper, 12pt]{article}
 
 
 \usepackage{amsmath}
@@ -21,8 +21,17 @@
 \end{align*}
 
 
-Parameterisation invariant..
+About the problem, and applications to computational anatomy...
 
+Other approches to this.. LDDMM, EPDIFF, 
+
+How our approach works..
+
+Parameterisation invariant..
+The  vector field is defined directly on the curve, rather than on the entire field (LDDMM) -- which deforms the space, rather resulting in a deformation of the space. Whereas we're deformng the shape only.
+
+
+The details ---
 
 The template $\vect q_A$ is the curve at $t=0$, and the target $\vect q_B$
 is the curve at $t=1$. The scheme finds a velocity $\vect u(s)$ to minimize
@@ -96,10 +105,10 @@ where $\hvect p$ is a test function.
 
 \begin{equation}
   \label{eq:dqhdt}
-  \left\langle \hat{p},\pp{\hat{q}}{t}\right\rangle = \left\langle \frac{1}{2}\left(
-      \frac{|u|^2}{\left|\pp{q}{s}\right|}
-      -\alpha^2\frac{\left|\pp{u}{s}\right|^2}{\left|\pp{q}{s}\right|^3}\right)
-    \pp{\hat{p}}{s},\pp{\hat{q}}{s}\right\rangle 
+  \left\langle \hvect{p},\pp{\hvect{q}}{t}\right\rangle = \left\langle \frac{1}{2}\left(
+      \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
+      -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}\right)
+    \pp{\hvect{p}}{s},\pp{\hvect{q}}{s}\right\rangle 
 \end{equation}
 
 
@@ -123,15 +132,23 @@ rearranging \eq{dqhdt},
 \begin{equation}
   \label{eq:fd_qh}
   \int \hvect p \cdot \hvect q^n \,ds = \int \hvect p \cdot \hvect q^{n+1} \,ds
-  + \int
+  - \int
    \left( 
-      \frac{|u|^2}{\left|\pp{vect q}{s}\right|}
-      -\alpha^2\frac{\left|\pp{u}{s}\right|^2}{\left|\pp{q}{s}\right|^3}
+      \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
+      -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}
   \right) \frac{ \partial \hvect p}{\partial s} 
   \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
 \end{equation}
 is solved for $q^n$ at each timestep.
 
 
+
+\section{TODO/Ask}
+\begin{itemize}
+\item Use of fmin\_l\_bfgs\_b instead of fmin\_bfgs
+\item Getting fmin\_bfgs to stop at the right spot, how to find the best value of $\sigma^2$?
+\item Why is the sign for $\frac{\delta S}{\delta u}$ wrong in the code!?
+\item Memory issues with fmin\_bfgs
+\end{itemize}
 
 \end{document}
