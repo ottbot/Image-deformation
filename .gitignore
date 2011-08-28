@@ -1,7 +1,9 @@
 *~
 /.DS_Store
-/image_deformation.pyc
+
 *.pyc
+fcc*.h
+form*.h
 #*#
 *.aux
 *.log
