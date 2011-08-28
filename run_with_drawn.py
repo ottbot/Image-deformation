@@ -1,25 +1,26 @@
-from image_deformation import Immersion
+import image_deformation as img
 import drawcurve
 
 import numpy as np
 
 # need to make "dummy" instance just to get the vector size
 # --- Fix this!
-c = Immersion(100,100)
-N = c.vec_size
-
-print "vec -- ", N
-tmpl = drawcurve.get_vec(N, "Draw template")
-targ = drawcurve.get_vec(N, "Draw target")
-print "a : ", np.shape(tmpl), " b: ", np.shape(targ)
 
 
-c = Immersion(100, 100, qA=tmpl, qB=targ)
+M, N = 100, 10
 
-U = c.U_initial()
+vs = img.template_size(M, N)
 
-c.calc_S(U)
-c.calc_ds(U)
+tmpl = drawcurve.get_vec(vs, "Draw template")
+targ = drawcurve.get_vec(vs, "Draw target")
 
-c.plot_steps
+opt = img.minimize(M, N, qA=tmpl, qB=targ)
 
+#c = img.Immersion(M, N, targ, tmpl)
+#c.calc_S(opt[0])
+
+#c.plot_steps()
+
+im = opt[1]
+
+im.plot_steps()

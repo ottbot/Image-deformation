@@ -216,20 +216,22 @@ class TestCurveOptimizer(unittest.TestCase):
                      
 
     def test_derivative(self):
-        N = 3
+        N = 10
         M = 100
 
         im = Immersion(M,N)
         
-        u = dol.Expression(('cos(x[0])/5.0','sin(x[0])/5.0'))
+        u = dol.Expression(('cos(x[0])/10.0','cos(x[0])/10.0'))
         #u = dol.Expression(('0.1','0.1'))
         u = dol.interpolate(u, im.V)
 
         U = np.zeros(im.mat_shape)
 
-        for n in xrange(im.N):
-            U[:,n] = 1.0*u.vector().array()
+        u_scaler = 0.2
 
+        for n in xrange(im.N):
+            U[:,n] = u_scaler * u.vector().array()
+            
         S  = im.calc_S(U)
         
         dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
@@ -238,12 +240,21 @@ class TestCurveOptimizer(unittest.TestCase):
 
         #v = dol.Expression(('cos(x[0])/2.0','cos(x[0])/2.0'))
         v = dol.Expression(('pow(x[0],2)/3.0','pow(x[0],2)/3.0'))
+        #v = dol.Expression(('x[0]','x[0]'))
+        #v = dol.Expression(('x[0]*0.001','x[0]*0.001'))
         v = dol.interpolate(v, im.V)
 
 
+        s_vdS = 0
+        s_v = 0
+
         for dS in im.matrix_to_coeffs(dSarr):
+            #print "--->", dS.vector().array(), v.vector().array()
+            #print "--> ", np.sum(dS.vector().array()), np.sum(v.vector().array())
+
             vdS += dol.assemble(dol.inner(v,dS)*dol.dx)
 
+        #print s_vdS * im.dt
         vdS *= im.dt
 
 
@@ -258,7 +269,7 @@ class TestCurveOptimizer(unittest.TestCase):
             im = Immersion(M,N)
             Up = np.zeros(im.mat_shape)
             for n in xrange(im.N):
-                Up[:,n] = 1.0*u.vector().array() + ep*v.vector().array()
+                Up[:,n] = u_scaler * u.vector().array() + ep*v.vector().array()
 
                 
             Sp = im.calc_S(Up)

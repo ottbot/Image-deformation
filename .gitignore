@@ -8,3 +8,4 @@ form*.h
 *.aux
 *.log
 report.pdf
+/min_u.txt
