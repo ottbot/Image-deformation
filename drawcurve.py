@@ -13,7 +13,8 @@ class DrawCurve:
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title(title)
-        plt.axis('equal')
+        #plt.axis('equal')
+        plt.axis((-np.pi,np.pi,-np.pi,np.pi))
         
         self.line, = ax.plot([0],[0])
 
