@@ -2,41 +2,86 @@
 
 
 \usepackage{amsmath}
-%\usepackage{vector}
+\usepackage{vector}
+\usepackage{cite}
+\usepackage{graphicx}
 
-\newcommand{\eq}[1]{Eq. \ref{eq:#1}}
+
+%\usepackage{mathpazo}
+%\usepackage[mathpazo]{flexisym}
+
+%\usepackage{breqn}
+
+\graphicspath{{./img/}}
+
+% \pdfpagewidth=\paperwidth 
+% \pdfpageheight=\paperheight
+
+\newcommand{\eq}[1]{(\ref{eq:#1})}
 \newcommand{\vect}[1]{\ensuremath{\mathbf{#1}}}
 \newcommand{\hvect}[1]{\ensuremath{\hat{\vect{#1}}}}
 
 \newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
-
+\newcommand{\vv}[2]{\frac{\delta #1}{\delta #2}}
+\newcommand{\angles}[1]{\left\langle #1 \right\rangle}
+\newcommand{\eps}{\varepsilon}
 \setlength{\parskip}{.3cm}
 
 \begin{document}
 
+\author{Robert Crim \\ Department of Aeronautics}
+\date{16 September 2011}
+\title{Numerical methods for deforming images
+\thanks{Submitted to Imperial College London in fulfilment of the requirements for the Degree of Master of Science in Advanced Computational Methods for Aeronautics, Flow Management and Fluid-Structure Interaction}}
 
+\maketitle
+\newpage
+\begin{abstract}
+TODO: write the abstract.
+\end{abstract}
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Introduction}
+
+
+ Computational anatomy is a discipline which aims to analyze biological shapes to determine variability across populates, ages, species, and in the presence of disease \cite{miller2009emerging}. It is hoped that the ability to correlate this variability with other anatomical information will aid in the early diagnosis of disease and in surgical planning. (CITE MICCAI 2011 proceedings?)
+
+WHY THIS IS DIFFICULT..
+Current approaches the problem include LDDMM, and EPDIFF  \cite{cotter2006singular, cotter2009curves} which involve finding a diffeomorphism with transforms the space to match the template to the target. 
+
+The current report uses a new approach introduced in \cite{bauer2011new}, where the deforming vector is defined directly on the curve itself, rather than the entire field. An inner metric is defined to determine a path between the template and target, which when minimized, resulting in the geodesic between the two shapes.
+
+We end up with a constrained optimisation problem
+
+Parameterisation invariant, and why it's important.
+
+
+\section{Spaces}
+
+
+$H^1(\Omega)$ is a Sobolev space, containing a test function $v$ such that $v^2$ and $||\nabla v||^2$ have finite integrals in $\Omega$. The Sobolev space allows functions to have discontinuous derivatives.. But we must use continuous space for our finite elements. WHY? 
+
+\section{Mesh and mapping}
+The $\Omega$ is an interval from $0 \leq s \leq 2\pi$, in the FEniCS solver a finite element mesh of $[0,2\pi]$ is divided into $M$ elements.
+
+The 1 dimensional interval is mapped to a parametric curve, IS THIS EVEN TRUE? Really need to understand this!
+
+
+
+\section{Derivation}
 \begin{align*}
   \vect q(s) &= 0 \leq s \leq 2\pi \\
   \vect q(0) &= \vect q(2\pi)
 \end{align*}
 
 
-About the problem, and applications to computational anatomy...
-
-Other approches to this.. LDDMM, EPDIFF, 
-
-How our approach works..
-
-Parameterisation invariant..
-The  vector field is defined directly on the curve, rather than on the entire field (LDDMM) -- which deforms the space, rather resulting in a deformation of the space. Whereas we're deformng the shape only.
-
-
-The details ---
-
 The template $\vect q_A$ is the curve at $t=0$, and the target $\vect q_B$
 is the curve at $t=1$. The scheme finds a velocity $\vect u(s)$ to minimize
 distance between the two curves. A BFGS algorithm is used to find the minimal
-functional $S[u]$,
+functional $S[u]$, *REWRITE*
 
 a metric, such that the dq/ds ensures is parameterisation invariant -- and non zero!
 
@@ -50,68 +95,154 @@ a metric, such that the dq/ds ensures is parameterisation invariant -- and non z
   + \frac{1}{2\sigma^2}\int^{2\pi}_{s=0}\left| q(s,1) - q_B(s)\right|^2\,ds.
 \end{equation}
 Subject to
-\begin{subequations}
 \begin{equation}
   \vect q_A(s) =\vect q(s,0)   \label{eq:template}
 \end{equation}
+and with the dynamical constraint
 \begin{equation}
   \frac{\partial \vect q}{\partial t}(s,t) = \vect u(s,t)  \label{eq:dqdt}
 \end{equation}
-\end{subequations}
 where $\alpha$ is dependent on the mesh size ????, and $\sigma$ is the weighing
 of error term $\left| q(s,1) - q_B(s)\right|^2$.
 
-
-
-Given a velocity $\vect u(s,t)$, the scheme first finds the vector $\vect q$ at
-each time step from $t=0$ to $t=1$. \eq{dqdt} is discretized using a forward finite difference
+Minimising $S[u]$ is easier with it's variational derivative known, such that
 \begin{equation}
-  \label{eq:fd_q}
-  \frac{\vect q(s)^{n+1}- \vect q(s)^n}{\Delta t} = \vect u(s).
+  \label{eq:lim_dS}
+  \int^1_0 \vv{S}{\vect u}\cdot \delta \vect u\,dt = 
+  \lim_{\eps \rightarrow 0} \frac{S[\vect u + \eps \delta \vect u] - S[\vect u]}{\eps},
 \end{equation}
-Using a test function $\vect r(s)$, \eq{df_q_test} is solved for $\vect q^{n+1}$
-at each time step.
+ however it's difficult to find $\vv{S}{\vect u}$ directly. Since we can find $\vv{S}{\vect q}$, a Lagrange multiplier can be used find $\vv{S}{\vect u}$.
+
+Relaxing the constraint \eq{dqdt} and introducing the Lagrange multiplier $\hvect q$, $S[\vect u]$ can be reformulated as
+\begin{equation}
+  \label{eq:J}
+  J[\vect q, \vect u, \hvect q] = S[\vect u] + \int^1_0\left\langle \hvect q ,\pp{q}{t} - \vect u\right\rangle \,dt
+\end{equation}
+with the bra-ket notion for inner product over the interval $[0,2\pi]$ with respect to $s$,
+\begin{equation}
+  \left\langle f(s),g(s) \right\rangle := \int^{2\pi}_0 f(s) \cdot g(s)\,ds.
+\end{equation}
+
+If $\vect u$ is chosen to satisfy \eq{dqdt}, then
+\begin{equation}
+  \label{eq:JeqS}
+  J[\vect u, \vect q, \hvect q] \equiv S[\vect u].
+\end{equation}
+By setting $\pp{J}{\hvect q} = 0$, \eq{dqdt} is satisfied and the derivative of \eq{JeqS} is
+\begin{equation}
+  \label{eq:dSeqdJ}
+  \pp{S}{\vect u} =  \pp{J}{\vect u} + \pp{J}{\vect q}\cdot\pp{\vect q}{\vect u}
+\end{equation}
+
+We first find an equation for  $\vv{J}{q}$ using the definition of the functional derivative \eq{lim_dS}
+\begin{equation}
+  \label{eq:lim_dJdq}
+  \left\langle \vv{J}{\vect q}, \delta \vect q \right\rangle =
+  \lim_{\eps \rightarrow 0} \frac{J[\vect u, \vect q + \eps \delta \vect q, \hvect q] - J[\vect u, \vect q, \hvect q]}{\eps}
+\end{equation}
+Expanding the right side of \eq{lim_dJdq} and taking only $O(\eps)$ terms gives
+\begin{align}
+  \label{eq:dJdq}
+  \left\langle \vv{J}{\vect q}, \delta \vect q \right\rangle =&
+  \frac{1}{2}\int^1_0\int^{2\pi}_0 |\vect u|^2
+  \frac{\pp{}{s}\delta \vect q \cdot \pp{\vect q}{s}}{|\pp{\vect q}{s}|}
+    + \alpha^2 \frac{|\pp{\vect u}{s}|^2}{|\pp{\vect q}{s}|^3} \pp{}{s}\delta \vect q \cdot \pp{\vect q}{s} \,ds\,dt  \nonumber \\
+    &+ \left\langle \delta \vect q, \vect q\big|_{t=1} - \vect q^B \right\rangle + \int^1_0\left\langle \hvect q, \pp{}{t} \delta \vect q \right\rangle\,dt
+\end{align}
+Using the property of adjoint equations $\pp{}{t}\angles{x,y} = \angles{\dot x, y} + \angles{x, \dot y}$, we can write
+\begin{equation}
+  \label{eq:adjoint}
+  \int^1_0\angles{\hvect q, \delta \pp{}{s} \vect q}\,dt =  \int^1_0\angles{\hvect q, \delta \vect q}\,dt -  \int^1_0\angles{\pp{\hvect q}{t}, \delta \vect q }\,dt
+\end{equation}
+Substituting \eq{adjoint}, \eq{dJdq} can be rewritten as
+\begin{align}
+  \label{eq:dJdq-adjoint}
+  \left\langle \vv{J}{\vect q}, \delta \vect q \right\rangle =&
+  \frac{1}{2}\int^1_0\int^{2\pi}_0 -\frac{\hvect q}{t}\cdot \delta \vect q + |\vect u|^2
+  \frac{\pp{}{s}\delta \vect q \cdot \pp{\vect q}{s}}{|\pp{\vect q}{s}|}
+    + \alpha^2 \frac{|\pp{\vect u}{s}|^2}{|\pp{\vect q}{s}|^3} \pp{}{s}\delta \vect q \cdot \pp{\vect q}{s} \,ds\,dt  \nonumber \\
+    &+ \angles{ \hvect q \big|_{t=1} + \frac{1}{\sigma^2}(\vect q \big|_{t=1} - \vect q_B), \delta \vect q}
+\end{align}
+NEED TO FIND SOURCE OF SIGN ERROR (and check adjoint).. that should be $\hvect q |_{t=1} - \frac{1}{\sigma^2}(\vect q \big|_{t=1} - \vect q_B)$!!!!!!
+
+Since $\vv{J}{\vect q} = 0$, we can separate \eq{dJdq-adjoint} into weak form equations for $\pp{\hvect q}{t}$ and $\hvect q \big|_{t=1}$
   \begin{equation}
-    \label{eq:df_q_test}
-    \int \vect{r}(s) \cdot \vect{q}^{n+1}(s)\, ds = \int \vect{r}(s) \cdot
-    \vect{q}^n (s)\,ds + \Delta t \int \vect{r}(s)\cdot \vect{v}(s)\, ds
+    \label{eq:qh_t1}
+    \angles{\delta \vect q, \hvect q\big|_{t=1}} = \frac{1}{\sigma^2}\angles{\delta \vect q, \vect q \big|_{t=1} - \vect q_B}
   \end{equation}
-
-
-
-The variational derivative $\frac{\delta S}{\delta \vect u}$ is need to improve
-the performance of the optimiser. 
-
-For a single timestep, the variational derivative can be found with the equation
+  \begin{equation}
+    \label{eq:dqhdt}
+    \angles{\delta \vect q, \pp{\hvect q}{t}} = \angles{\frac{1}{2}\left(\frac{\left|\vect u\right|}{\left|\pp{\vect u}{s}\right|} + \alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect u}{s}\right|^3}\right)\pp{}{s}\delta \vect q, \pp{\vect q}{s}}
+  \end{equation}
+Finally, we can find a weak form equation for $\vv{S}{\vect u}$,
 \begin{equation}
-  \label{eq:dsdu}
-  \langle \vect v, \frac{\delta S}{\delta \vect u}\rangle =
-  \langle \vect v, \vect u \left| \frac{\partial \vect q}{\partial s}\right |\rangle 
-  + \alpha^2 \langle \frac{\partial \vect v}{\partial s},
-  \frac{\frac{\partial \vect v}{\partial s} }{ \left|\frac{\partial \vect q}{\partial s}\right|}
-\rangle - \langle \vect v, \hvect{q} \rangle,
+  \label{eq:var_dSdu-dJdu}
+  \angles{\vv{S}{\vect u}, \delta \vect u} = \angles{\vv{J}{\vect u}, \delta \vect u} =
+  \lim_{\eps \rightarrow 0} \frac{J[\vect u + \eps \delta \vect u, \vect q, \hvect q] - J[\vect u, \vect q, \hvect q]}{\eps}.
 \end{equation}
-where $\vect v$ is a test function, and $\hvect q$ is a Lagrange multiplier (SHOW..)
-
-For each time step, $\hvect q$ is found using backwards finite difference method
-where $\hvect q(s,1)$ is found by
+Expanding the right and side of \eq{var_dSdu-dJdu}, and taking only $O(\eps)$ terms yields
 \begin{equation}
-  \label{eq:qh1}
-  \langle \hvect p, \hvect q(s,1) \rangle = - \frac{1}{\sigma^2}
-  \langle \hvect p, \vect q(s,1) - q_B \rangle
-\end{equation}
-where $\hvect p$ is a test function.
-
-
-\begin{equation}
-  \label{eq:dqhdt}
-  \left\langle \hvect{p},\pp{\hvect{q}}{t}\right\rangle = \left\langle \frac{1}{2}\left(
-      \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
-      -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}\right)
-    \pp{\hvect{p}}{s},\pp{\hvect{q}}{s}\right\rangle 
+  \label{eq:dSdu-deltau}
+  \angles{\vv{S}{\vect u}, \delta \vect u} = \angles{\vect u \left|\pp{\vect q}{s}\right|,\delta \vect u} 
+  + \alpha^2 \angles{\frac{\pp{\vect u}{s}}{\left|\pp{\vect u}{s}\right|},\pp{}{s}\delta \vect u,}
+    - \angles{\hvect q,\delta \vect u}.
 \end{equation}
 
 
+\section{Implementation in FEniCS}
+... The equations are easy to put into the form $a(u,v) = L(v)$, where $a(u,v)$ is bilinear, and $L(v)$ is linear translate well to the variational problem formulation used in FEnICS.
+
+\subsection{Discretisation}
+
+% Given a velocity $\vect u(s,t)$, the scheme first finds the vector $\vect q$ at
+% each time step from $t=0$ to $t=1$. \eq{dqdt} is discretized using a forward finite difference
+% \begin{equation}
+%   \label{eq:fd_q}
+%   \frac{\vect q(s)^{n+1}- \vect q(s)^n}{\Delta t} = \vect u(s).
+% \end{equation}
+% Using a test function $\vect r(s)$, \eq{df_q_test} is solved for $\vect q^{n+1}$
+% at each time step.
+%   \begin{equation}
+%     \label{eq:df_q_test}
+%     \int \vect{r}(s) \cdot \vect{q}^{n+1}(s)\, ds = \int \vect{r}(s) \cdot
+%     \vect{q}^n (s)\,ds + \Delta t \int \vect{r}(s)\cdot \vect{v}(s)\, ds
+%   \end{equation}
+
+
+
+% The variational derivative $\frac{\delta S}{\delta \vect u}$ is need to improve
+% the performance of the optimiser. 
+
+% For a single timestep, the variational derivative can be found with the equation
+% \begin{equation}
+%   \label{eq:dsdu}
+%   \langle \vect v, \frac{\delta S}{\delta \vect u}\rangle =
+%   \langle \vect v, \vect u \left| \frac{\partial \vect q}{\partial s}\right |\rangle 
+%   + \alpha^2 \langle \frac{\partial \vect v}{\partial s},
+%   \frac{\frac{\partial \vect v}{\partial s} }{ \left|\frac{\partial \vect q}{\partial s}\right|}
+% \rangle - \langle \vect v, \hvect{q} \rangle,
+% \end{equation}
+% where $\vect v$ is a test function, and $\hvect q$ is a Lagrange multiplier (SHOW..)
+
+% For each time step, $\hvect q$ is found using backwards finite difference method
+% where $\hvect q(s,1)$ is found by
+% \begin{equation}
+%   \label{eq:qh1}
+%   \langle \hvect p, \hvect q(s,1) \rangle = - \frac{1}{\sigma^2}
+%   \langle \hvect p, \vect q(s,1) - q_B \rangle
+% \end{equation}
+% where $\hvect p$ is a test function.
+
+
+% \begin{equation}
+%   \label{eq:dqhdt}
+%   \left\langle \hvect{p},\pp{\hvect{q}}{t}\right\rangle = \left\langle \frac{1}{2}\left(
+%       \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
+%       -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}\right)
+%     \pp{\hvect{p}}{s},\pp{\hvect{q}}{s}\right\rangle 
+% \end{equation}
+
+  % OLD---------
   % \langle \hvect p, \frac{\partial \hvect q}{\partial t} \rangle =
   % \langle
   % \left( 
@@ -125,30 +256,37 @@ where $\hvect p$ is a test function.
   %     \left| \frac{\partial \vect u}{\partial s}\right|^2}{
   %     \left| \frac{\partial \vect q}{\partial s}\right|^2}
   % \right)\frac{\partial \hvect p}{\partial s}, \frac{\partial \hvect q}{\partial s} \rangle
+  % END OLD----------
 
+% Substituting $\frac{\partial \hvect q}{\partial t}$ with a backwards finite difference and
+% rearranging \eq{dqhdt},
+% \begin{equation}
+%   \label{eq:fd_qh}
+%   \int \hvect p \cdot \hvect q^n \,ds = \int \hvect p \cdot \hvect q^{n+1} \,ds
+%   - \int
+%    \left( 
+%       \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
+%       -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}
+%   \right) \frac{ \partial \hvect p}{\partial s} 
+%   \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
+% \end{equation}
+% is solved for $q^n$ at each timestep.
 
-Substituting $\frac{\partial \hvect q}{\partial t}$ with a backwards finite difference and
-rearranging \eq{dqhdt},
-\begin{equation}
-  \label{eq:fd_qh}
-  \int \hvect p \cdot \hvect q^n \,ds = \int \hvect p \cdot \hvect q^{n+1} \,ds
-  - \int
-   \left( 
-      \frac{|\vect u|^2}{\left|\pp{\vect q}{s}\right|}
-      -\alpha^2\frac{\left|\pp{\vect u}{s}\right|^2}{\left|\pp{\vect q}{s}\right|^3}
-  \right) \frac{ \partial \hvect p}{\partial s} 
-  \cdot \frac{\partial \hvect q^{n+1}}{\partial s}\,ds
-\end{equation}
-is solved for $q^n$ at each timestep.
 
 
 
 \section{TODO/Ask}
 \begin{itemize}
 \item Use of fmin\_l\_bfgs\_b instead of fmin\_bfgs
-\item Getting fmin\_bfgs to stop at the right spot, how to find the best value of $\sigma^2$?
-\item Why is the sign for $\frac{\delta S}{\delta u}$ wrong in the code!?
-\item Memory issues with fmin\_bfgs
+\item Getting fmin\_bfgs to stop at the right spot, how to find the best value of $\sigma^2$ and $\alpha^2$? (now fixed with change in calc\_Qh ??)
+\item Why is the sign for $\frac{\delta S}{\delta u}$ wrong in the code.. fixed, now sign error in derivation
+\item Memory issues with fmin\_bfgs (seem ok with fortran bfgs)
+\item S and $\vv{S}{u}$ get very large with more timesteps.
 \end{itemize}
 
+
+\newpage
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{unsrt}
+\bibliography{refs}{}
 \end{document}
