@@ -35,7 +35,7 @@ class Immersion:
 
         # Template
         if qA is None:        
-            self.qA_exp = Expression(('sin(x[0])','cos(x[0])'))
+            self.qA_exp = Expression(('sin(x[0] + 1)','cos(x[0] + 2)'))
             #self.qA_exp = Expression(('sin(x[0])','cos(x[0])'))
             self.qA = interpolate(self.qA_exp, self.V)
         else:
@@ -128,7 +128,8 @@ class Immersion:
         qh1 = TrialFunction(self.V)
 
         a = inner(p,qh1)*dx
-        L = -1.0/self.sigma_sq * inner(p,self.Q[-1] - self.qB)*dx
+        # fixed this sign:
+        L = 1.0/self.sigma_sq * inner(p,self.Q[-1] - self.qB)*dx
 
         A = assemble(a)
         b = assemble(L)
@@ -162,7 +163,8 @@ class Immersion:
             #c = 0.5*(inner(u,u)/j - (self.alpha_sq)*inner(u.dx(0),u.dx(0))/j**3)
             c = 0.5*(inner(u,u)/j - (self.alpha_sq)*self.j(u)**2/j**3)
 
-            L = inner(p,qh)*dx - inner(c*p.dx(0),qh.dx(0))*self.dt*dx
+            ## -- CHANGED -> qh.dx(0) to q.dx(0)
+            L = inner(p,qh)*dx - inner(c*p.dx(0),q.dx(0))*self.dt*dx
             
             b = assemble(L)
 
@@ -201,7 +203,7 @@ class Immersion:
             #mf = Function(self.V, f)
 
             #self.dS[n].assign(dS)
-            self.dS[n].vector()[:] = -1.*dS.vector().array()
+            self.dS[n].vector()[:] = dS.vector().array()
 
             # self.print_vector_info("dS",self.dS[n])
             # self.print_vector_info("u",u)
