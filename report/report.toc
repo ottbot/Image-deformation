@@ -1,0 +1,11 @@
+\contentsline {section}{\numberline {1}Introduction}{4}
+\contentsline {section}{\numberline {2}Spaces}{4}
+\contentsline {section}{\numberline {3}Mesh and mapping}{4}
+\contentsline {section}{\numberline {4}Derivation}{5}
+\contentsline {section}{\numberline {5}Numerical scheme}{7}
+\contentsline {subsection}{\numberline {5.1}Discretisation}{7}
+\contentsline {subsection}{\numberline {5.2}Implementation in FEniCS}{7}
+\contentsline {subsection}{\numberline {5.3}L-BFGS minimisation algorithm}{7}
+\contentsline {section}{\numberline {6}Numerical experiments}{7}
+\contentsline {section}{\numberline {7}Conclusion}{8}
+\contentsline {section}{References}{9}

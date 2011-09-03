@@ -217,7 +217,7 @@ class TestCurveOptimizer(unittest.TestCase):
 
     def test_derivative(self):
         N = 10
-        M = 100
+        M = 500
 
         im = Immersion(M,N)
         
@@ -238,8 +238,8 @@ class TestCurveOptimizer(unittest.TestCase):
 
         vdS = 0
 
-        #v = dol.Expression(('cos(x[0])/2.0','cos(x[0])/2.0'))
-        v = dol.Expression(('pow(x[0],2)/3.0','pow(x[0],2)/3.0'))
+        v = dol.Expression(('cos(x[0])/2.0','cos(x[0])/2.0'))
+        #v = dol.Expression(('pow(x[0],2)/3.0','pow(x[0],2)/3.0'))
         #v = dol.Expression(('x[0]','x[0]'))
         #v = dol.Expression(('x[0]*0.001','x[0]*0.001'))
         v = dol.interpolate(v, im.V)

@@ -1,0 +1,41 @@
+\begin{thebibliography}{1}
+
+\bibitem{miller2009emerging}
+M.I. Miller and A.~Qiu.
+\newblock The emerging discipline of computational functional anatomy.
+\newblock {\em NeuroImage}, 45(1):S16--S39, 2009.
+
+\bibitem{cotter2006singular}
+C.J. Cotter and D.D. Holm.
+\newblock Singular solutions, momentum maps and computational anatomy.
+\newblock {\em Arxiv preprint nlin/0605020}, 2006.
+
+\bibitem{cotter2009curves}
+C.J. Cotter.
+\newblock The variational particle-mesh method for matching curves.
+\newblock {\em Journal of Physics A: Mathematical and Theoretical}, 41:344003,
+  2008.
+
+\bibitem{bauer2011new}
+M.~Bauer and M.~Bruveris.
+\newblock A new paradigm for surface registration.
+\newblock {\em Arxiv preprint arXiv:1106.0620}, 2011.
+
+\bibitem{nocedal1999numerical}
+J.~Nocedal and S.J. Wright.
+\newblock {\em Numerical optimization}.
+\newblock Springer verlag, 1999.
+
+\bibitem{byrd1995limited}
+R.H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu.
+\newblock A limited memory algorithm for bound constrained optimization.
+\newblock {\em SIAM Journal on Scientific Computing}, 16(5):1190--1208, 1995.
+
+\bibitem{zhu1997algorithm}
+C.~Zhu, R.H. Byrd, P.~Lu, and J.~Nocedal.
+\newblock Algorithm 778: L-bfgs-b: Fortran subroutines for large-scale
+  bound-constrained optimization.
+\newblock {\em ACM Transactions on Mathematical Software (TOMS)},
+  23(4):550--560, 1997.
+
+\end{thebibliography}

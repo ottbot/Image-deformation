@@ -1,9 +1,12 @@
 from dolfin import *
 import time as pytime
+import os as os
+
 import numpy as np
 import scipy as sp
 #from scipy.optimize import fmin_bfgs
 from scipy.optimize import fmin_l_bfgs_b
+
 import matplotlib.pylab as plt
 
 
@@ -15,36 +18,41 @@ class Immersion:
     populated = False
 
 
-    def __init__(self, m = 100,n=10, qA=None, qB=None,  deg_cont = 2, deg_dis = 1):
-        self.M = m # number of nodal val
-        self.N = n # number of timesteps
+    def __init__(self, M= 100, N=10, qA=None, qB=None, alpha=None, sigma=None,  deg_cont = 2, deg_dis = 1):
+        self.M = M # number of nodal val
+        self.N = N # number of timesteps
 
-        self.dt = 1./n
+        self.dt = 1./N
 
         self.mesh = Interval(self.M, 0, 2*pi)
 
         self.dV = VectorFunctionSpace(self.mesh, 'DG', deg_cont - 1, dim=2)
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
 
-        self.sigma_sq = 0.00001
-        self.alpha_sq = 0.0001
+        if alpha is None:
+            self.alpha_sq = 1.
+        else: 
+            self.alpha_sq = alpha**2
 
+        if sigma is None:
+            self.sigma_sq = 1.
+        else:
+            self.sigma_sq = sigma**2
 
-        # TODO.. if tmpl/target is a string (tuple) take it as an expression
-        #        if it's an array, do it 
 
         # Template
         if qA is None:        
-            self.qA_exp = Expression(('sin(x[0] + 1)','cos(x[0] + 2)'))
-            #self.qA_exp = Expression(('sin(x[0])','cos(x[0])'))
+            #self.qA_exp = Expression(('sin(x[0] + 1)','cos(x[0] + 2)'))
+            self.qA_exp = Expression(('100*sin(x[0])','100*cos(x[0])'))
             self.qA = interpolate(self.qA_exp, self.V)
         else:
             self.qA = Function(self.V)
             self.qA.vector()[:] = qA
 
 
+        # Target
         if qB is None:
-            self.qB_exp = Expression(('sin(x[0] - 1)','cos(x[0] - 2)'))
+            self.qB_exp = Expression(('100*sin(x[0])','100*cos(x[0] - 2)'))
             #self.qB_exp = Expression(('1.5*sin(x[0])','0.8*cos(x[0])'))
             self.qB = interpolate(self.qB_exp, self.V)
         else:
@@ -52,7 +60,22 @@ class Immersion:
             self.qB.vector()[:] = qB
             
 
+        # Determine axis lims for plotting
+        minA, maxA = np.min(self.qA.vector().array()), np.max(self.qA.vector().array())
+        minB, maxB = np.min(self.qB.vector().array()), np.max(self.qB.vector().array())
+
+        mins = minA if minA < minB else minB
+        maxs = maxA if maxA < maxB else maxB
+
+        pad = 1*np.abs((maxs/mins))
         
+        lbnd = int(round(mins - pad,-1))
+        ubnd = int(round(maxs + pad,-1))
+
+        self.axis_bounds = (lbnd,ubnd,lbnd,ubnd,)
+        
+
+        # determine size needed to input/output vectors
         x, y = self.mat_shape = (np.shape(self.qB.vector().array())[0], self.N)
         self.template_size = x
         self.vec_size = x * y
@@ -119,6 +142,7 @@ class Immersion:
         
         err = (1/(2*self.sigma_sq))*assemble(inner(diff,diff)*dx)
 
+        #print S, ' ', err
         return S + err
 
             
@@ -204,19 +228,8 @@ class Immersion:
 
             #self.dS[n].assign(dS)
             self.dS[n].vector()[:] = dS.vector().array()
-
-            # self.print_vector_info("dS",self.dS[n])
-            # self.print_vector_info("u",u)
-            # self.print_vector_info("qh",qh)
-            # print " "
-
-            
             
         return np.reshape(self.coeffs_to_matrix(self.dS), self.vec_size)
-
-    def print_vector_info(self,st, u):
-        print st, " --> max: ", np.max(u.vector().array()), " min ", np.min(u.vector().array()), " mean: ", np.mean(u.vector().array())
-
         
 
     def need_to_repopulate(self, xk):
@@ -245,58 +258,84 @@ class Immersion:
 
         return C
 
-    def plot(self, Q):
+    def new_figure(self):
         plt.figure()
-        plt.axis('equal')
+        plt.axis(self.axis_bounds)
+        ax = plt.gca()
+        ax.set_aspect(1)
+        plt.draw()
 
+
+    def plot(self, Q):
+        self.new_figure()
         plt.plot(*self.split_array(Q))
+
+    def plot_step(self, n):
+        self.new_figure()
+
+        plt.plot(*self.split_array(self.qA),ls="--")
+        plt.plot(*self.split_array(self.Q[n]))
+
+
+
+    def plot_quiver(self, n):
+        self.new_figure()
+
+        x,y = self.split_array(self.Q[n])
+
+        u,v = self.split_array(self.U[n])
+
+        mag = [np.sqrt(u[i]**2+v[i]**2) for i in xrange(np.size(u))]
+        norm = plt.normalize(np.min(mag), np.max(mag))
+
+        C = [plt.cm.jet(norm(m)) for m in mag]
+
+        plt.plot(x,y)
+        plt.quiver(x,y,-u,-v,color=C)
+        
 
     def plot_no_split(self,Q):
         plt.figure()
-        plt.axis('equal')
 
         plt.plot(Q.vector().array())
 
 
     def plot_qAqB(self):
-        plt.figure()
-        plt.axis('equal')
+        self.new_figure()
         plt.plot(*self.split_array(self.qA))
         plt.plot(*self.split_array(self.qB))
-        plt.show()
+
 
     def plot_steps(self):
         plt.ion()
-        plt.figure()
+        self.new_figure()
 
-        sorted = self.get_sort_order(self.V)
+        plt.plot(*self.split_array(self.qA),ls='--')
 
-        #X,Y =  self.split_array(self.qB)
-        #plt.plot(X[sorted], Y[sorted])
-        plt.plot(*self.split_array(self.qB))
+        line, = plt.plot(*self.split_array(self.Q[0]),lw=2)
 
-        #X,Y =  self.split_array(self.qA)
-        #plt.plot(X[sorted], Y[sorted])
-        plt.plot(*self.split_array(self.qA))
-
-        plt.axis('equal')
-
-        #X,Y = self.split_array(self.Q[0])
-        #line, = plt.plot(X[sorted], Y[sorted])
-        line, = plt.plot(*self.split_array(self.Q[0]))
-
-        plt.xlim(-3,3)
-        plt.ylim(-3,3)
-        
         for q in self.Q:
-            #X,Y = self.split_array(q)
+            qsplt = self.split_array(q)
 
-            #line.set_data(X[sorted], Y[sorted])
-            line.set_data(*self.split_array(q))
-            pytime.sleep(2.0*self.dt)
+            plt.plot(*qsplt,ls=':')
+            line.set_data(*qsplt)
 
+            pytime.sleep(3.0*self.dt)
             plt.draw()
             
+
+    def plot_steps_held(self):
+        self.new_figure()
+
+        plt.plot(*self.split_array(self.qB),ls='-')
+        plt.plot(*self.split_array(self.qA),ls='-')
+
+        #plt.plot(*self.split_array(self.Q[0]))
+
+        for q in self.Q:
+            plt.plot(*self.split_array(q),ls=':')
+
+
 
 
     # utility functions
@@ -311,6 +350,7 @@ class Immersion:
 
         return X,Y
 
+
     def get_sort_order(self, fun_space):
         vals = interpolate(Expression(('x[0]','x[0]')), fun_space)
         return np.argsort(self.split_array(vals)[0])
@@ -321,43 +361,116 @@ class Immersion:
 def template_size(M, N):
     return Immersion(M,N).template_size
 
-def S(U, M, N, qA, qB):
-    im = Immersion(M, N, qA, qB)
+def S(U, M, N, qA, qB, alpha, sigma):
+    im = Immersion(M, N, qA, qB, alpha, sigma)
     return im.calc_S(U)
 
-def dS(U, M, N, qA, qB):
-    im = Immersion(M, N, qA, qB)
+def dS(U, M, N, qA, qB, alpha, sigma):
+    im = Immersion(M, N, qA, qB, alpha, sigma)
     return im.calc_dS(U)
 
 
-def minimize(M = 100, N = 20, qA=None, qB=None, U = False):
-    # retall option returns vectors at each iteration..
-    # does tweaking epsilon keep it from blowing up!?
-
-    #callbacks = 0
-
-    def write_U(U):
-        np.savetxt('min_u.txt', U, fmt="%12.6G")
-        print "--------> ", np.shape(U)
-        #callbacks += 1
-
-    im = Immersion(M, N, qA, qB)
+def minimize(M = 100, N = 20, qA=None, qB=None, alpha=None, sigma=None, U = False):
+    im = Immersion(M, N, qA, qB, alpha, sigma)
 
     if U is False:
         U = np.zeros(im.vec_size)
 
-    opt = fmin_l_bfgs_b(S, U, fprime=dS, args=(M,N,qA,qB))
-    #opt = fmin_bfgs(S, U, fprime=dS, args=(M,N), callback=write_U, full_output=True)#, epsilon=1e-3)
+    opt = fmin_l_bfgs_b(S, U, fprime=dS, args=(M,N,qA,qB,alpha,sigma))
+    
 
+    m = Immersion(M, N, qA, qB, alpha, sigma)
 
-    m = Immersion(M, N, qA, qB)
     im.calc_S(opt[0])
 
+
+    #U = np.reshape(opt[0], im.mat_shape)
+    #np.savetxt("min_u.txt", U, fmt="%12.6G")
+
     return [opt, im]
+
+
+
+def run_case(casename, alpha=0.001, sigma=0.001,M=100,N=10):
+
+    #read tmpl, targ from files
+    case = "cases/" + casename + "/"
+
+    if os.path.exists(case):
+        targ = np.genfromtxt(case + "qb.txt", unpack=True)
+        tmpl = np.genfromtxt(case + "qa.txt", unpack=True)
+        
+        o = minimize(M, N, tmpl,targ,alpha,sigma)
+
+        print "case ", case, "S = ", o[0][1]
+        im = o[1]
+
+        for n in xrange(N):
+            im.plot(im.Q[n])
+            plt.savefig("%sq_%d.pdf" % (case, n))
+
+
+            im.plot_step(n)
+            plt.savefig("%sstep_%d.pdf" % (case, n))
+
+            im.plot_quiver(n)
+            plt.savefig("%squiver_%d.pdf" % (case, n))
+
+
+            
+        im.plot_steps_held()
+        plt.savefig(case+"steps.pdf")
+
+        im.plot(im.qA)
+        plt.savefig(case+"qa.pdf")
+
+        im.plot(im.qB)
+        plt.savefig(case+"qb.pdf")
+
+        im.plot_qAqB()
+        plt.savefig(case+"qaqb.pdf")
+
+
+        np.savetxt(case+"u.txt", o[0][0], fmt="%12.6G")
+
+        return im
+    else:
+        if os.path.exists("cases"):
+            cases = ", ".join(os.listdir("cases"))
+        else:
+            cases = "NONE -- no cases directory"
+        raise OSError, "That case does not exist. Choices: " + cases
+
+
+def load_case(casename):
+    case = "cases/" + casename + "/"
+
+    if os.path.exists(case+"u.txt"):
+        
+        targ = np.genfromtxt(case + "qb.txt", unpack=True)
+        tmpl = np.genfromtxt(case + "qa.txt", unpack=True)
+        U = np.genfromtxt(case + "u.txt", unpack=True)
+
+        im = Immersion(100, 10, tmpl,targ,0.001,0.001)
+
+        im.calc_S(U)
+
+        return im
+    else:
+        raise OSError, "That case does not exist, or has no been run yet."
+
 
 def U_from_file(filename="min_u.txt"):
     #TODO.. determine M,N from file (reshape pre-save)
     U = np.genfromtxt(filename, unpack=True)
-    im = Immersion(100,10)
+
+    N,M = np.shape(U)
+
+    M = (M-2)/4
+    
+    im = Immersion(M,N)
+
     im.calc_S(U)
     return im
+
+

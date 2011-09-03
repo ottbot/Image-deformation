@@ -1,4 +1,4 @@
-\documentclass[a4paper, 12pt]{article}
+\documentclass[a4paper, 10pt]{article}
 
 
 \usepackage{amsmath}
@@ -50,9 +50,14 @@ TODO: write the abstract.
  Computational anatomy is a discipline which aims to analyze biological shapes to determine variability across populates, ages, species, and in the presence of disease \cite{miller2009emerging}. It is hoped that the ability to correlate this variability with other anatomical information will aid in the early diagnosis of disease and in surgical planning. (CITE MICCAI 2011 proceedings?)
 
 WHY THIS IS DIFFICULT..
+
+Our approach is inner metric, the other is outer metric
+
 Current approaches the problem include LDDMM, and EPDIFF  \cite{cotter2006singular, cotter2009curves} which involve finding a diffeomorphism with transforms the space to match the template to the target. 
 
 The current report uses a new approach introduced in \cite{bauer2011new}, where the deforming vector is defined directly on the curve itself, rather than the entire field. An inner metric is defined to determine a path between the template and target, which when minimized, resulting in the geodesic between the two shapes.
+
+A benefit of using inner metric spaces is the shape is allowed to intersect itself!
 
 We end up with a constrained optimisation problem
 
@@ -62,7 +67,12 @@ Parameterisation invariant, and why it's important.
 \section{Spaces}
 
 
-$H^1(\Omega)$ is a Sobolev space, containing a test function $v$ such that $v^2$ and $||\nabla v||^2$ have finite integrals in $\Omega$. The Sobolev space allows functions to have discontinuous derivatives.. But we must use continuous space for our finite elements. WHY? 
+$H^1(\Omega)$ is a Sobolev space, containing a test function $v$ such that $v^2$ and $||\nabla v||^2$ have finite integrals in $\Omega$. The Sobolev space allows functions to have discontinuous derivatives.. 
+
+
+We must use continuous space for our finite elements, since we have to be able to integrate the adjoint, $\hvect q$, and stuff
+
+
 
 \section{Mesh and mapping}
 The $\Omega$ is an interval from $0 \leq s \leq 2\pi$, in the FEniCS solver a finite element mesh of $[0,2\pi]$ is divided into $M$ elements.
@@ -85,6 +95,8 @@ functional $S[u]$, *REWRITE*
 
 a metric, such that the dq/ds ensures is parameterisation invariant -- and non zero!
 
+Need to explain the metric part, and penalty parts of \eq{S}.
+
 \begin{equation}
   \label{eq:S}
   S = \frac{1}{2} \int^{1}_{t=0} \int^{2\pi}_{s=0}\left( \left| \vect u(s,t) \right|^2 
@@ -103,7 +115,7 @@ and with the dynamical constraint
   \frac{\partial \vect q}{\partial t}(s,t) = \vect u(s,t)  \label{eq:dqdt}
 \end{equation}
 where $\alpha$ is dependent on the mesh size ????, and $\sigma$ is the weighing
-of error term $\left| q(s,1) - q_B(s)\right|^2$.
+of penalty term $\left| q(s,1) - q_B(s)\right|^2$.
 
 Minimising $S[u]$ is easier with it's variational derivative known, such that
 \begin{equation}
@@ -150,10 +162,15 @@ Expanding the right side of \eq{lim_dJdq} and taking only $O(\eps)$ terms gives
     &+ \left\langle \delta \vect q, \vect q\big|_{t=1} - \vect q^B \right\rangle + \int^1_0\left\langle \hvect q, \pp{}{t} \delta \vect q \right\rangle\,dt
 \end{align}
 Using the property of adjoint equations $\pp{}{t}\angles{x,y} = \angles{\dot x, y} + \angles{x, \dot y}$, we can write
-\begin{equation}
+\begin{align}
   \label{eq:adjoint}
-  \int^1_0\angles{\hvect q, \delta \pp{}{s} \vect q}\,dt =  \int^1_0\angles{\hvect q, \delta \vect q}\,dt -  \int^1_0\angles{\pp{\hvect q}{t}, \delta \vect q }\,dt
-\end{equation}
+  \int^1_0\angles{\hvect q, \delta \pp{}{s} \vect q}\,dt &=  
+  \int^1_0\angles{\frac{d}{dt}\hvect q, \delta \vect q}\,dt -  \int^1_0\angles{\pp{\hvect q}{t}, \delta \vect q }\,dt \nonumber \\
+  &= \int^1_0\angles{\frac{d}{dt}\hvect q, \delta \vect q}\,dt - \Big[\angles{\hvect q, \delta \vect q}\Big]^1_0 \nonumber \\
+  &= \int^1_0\angles{\frac{d}{dt}\hvect q, \delta \vect q}\,dt - \angles{\hvect q\big|_{t=1}, \delta \vect q\big|_{t=0}},
+\end{align}
+where $\delta \vect q\big|_{t=0} = 0$, due to \eq{template}.
+
 Substituting \eq{adjoint}, \eq{dJdq} can be rewritten as
 \begin{align}
   \label{eq:dJdq-adjoint}
@@ -163,7 +180,7 @@ Substituting \eq{adjoint}, \eq{dJdq} can be rewritten as
     + \alpha^2 \frac{|\pp{\vect u}{s}|^2}{|\pp{\vect q}{s}|^3} \pp{}{s}\delta \vect q \cdot \pp{\vect q}{s} \,ds\,dt  \nonumber \\
     &+ \angles{ \hvect q \big|_{t=1} + \frac{1}{\sigma^2}(\vect q \big|_{t=1} - \vect q_B), \delta \vect q}
 \end{align}
-NEED TO FIND SOURCE OF SIGN ERROR (and check adjoint).. that should be $\hvect q |_{t=1} - \frac{1}{\sigma^2}(\vect q \big|_{t=1} - \vect q_B)$!!!!!!
+
 
 Since $\vv{J}{\vect q} = 0$, we can separate \eq{dJdq-adjoint} into weak form equations for $\pp{\hvect q}{t}$ and $\hvect q \big|_{t=1}$
   \begin{equation}
@@ -189,10 +206,81 @@ Expanding the right and side of \eq{var_dSdu-dJdu}, and taking only $O(\eps)$ te
 \end{equation}
 
 
-\section{Implementation in FEniCS}
+\section{Numerical scheme}
+
+An overview of the solution process.
+
+The optimisation agorithm takes an initial guess of $U$, which is a matrix of $\vect u$ vectors at each timestep, and the functions to calculate $S[U]$ and $\vv{S}{U}$. 
+\subsection{Discretisation}
+
+write about the eqns FEniCS uses
+
+\subsection{Implementation in FEniCS}
+Notes about how FEniCS is used.. Be sure to cite the FEnICS project!
+
 ... The equations are easy to put into the form $a(u,v) = L(v)$, where $a(u,v)$ is bilinear, and $L(v)$ is linear translate well to the variational problem formulation used in FEnICS.
 
-\subsection{Discretisation}
+How the JIT compiler is used, and how why it's good.
+
+Note how reshaping is needed to work with the minimisation algorithm..
+
+
+\subsection{L-BFGS minimisation algorithm}
+
+
+Explain how this works, limited memory BGFS. 
+
+Cite book \cite{nocedal1999numerical} for general BFGS
+Cite L-BFGS paper \cite{byrd1995limited}
+Cite L-BFGS-B paper \cite{zhu1997algorithm}
+
+\section{Numerical experiments}
+
+Results of small deformations
+Results of large deformation
+
+Show U, how U changes
+
+Some way to demonstrate evolution, plot TEN time steps on top?
+Show the ``mean'' between two shapes $t = N/2*\delta t$.
+
+Show the convergence test results, try first and second order..
+How does it change we use other finite elements? Instead of interval?
+
+\subsection{Small deformations}
+  Match shapes with small deformations.
+
+
+\subsection{Large deformations}
+Need test shapes.
+
+\subsection{Shape matching}
+
+Given a curve, we attempt to identity the curve as a particular shape from a small database of known shapes. 
+
+Using a hand drawn star, the scheme was able to successfully identity the shape as a star by deforming into each of the shapes in the database. The smallest $S$ gives the shape which most closely matches the given shape. 
+
+% shape_match/circle.txt 14832680.5754
+% shape_match/hexagon.txt 23762865.2721
+% shape_match/pentagon.txt 10049668.5673
+% shape_match/square.txt 39626911.0532
+% shape_match/star.txt 1662214.64395
+% shape_match/star_11.txt 14837679.2763
+% shape_match/star_six.txt 20461001.086
+% shape_match/triangle.txt 27393192.9801
+% Matching shape is:  shape_match/star.txt
+
+
+A limitation with the current code is that scaling and translation is not accounted for.
+
+
+\section{Conclusion}
+
+A numerical scheme to finding an approximate geodesic between two shapes is presented. Unlike outer metric methods, which deform the space itself, we use inner metrics to attach a deforming vector to the shape itself.
+
+How can code performance be improved? Finding $\sigma$?
+
+Maybe we can try to find an equation for the geodesic using inner metrics, like EPDIFF does on outer metrics. How does the scheme scale? Is the problem suited to very large problems?
 
 % Given a velocity $\vect u(s,t)$, the scheme first finds the vector $\vect q$ at
 % each time step from $t=0$ to $t=1$. \eq{dqdt} is discretized using a forward finite difference
@@ -275,14 +363,6 @@ Expanding the right and side of \eq{var_dSdu-dJdu}, and taking only $O(\eps)$ te
 
 
 
-\section{TODO/Ask}
-\begin{itemize}
-\item Use of fmin\_l\_bfgs\_b instead of fmin\_bfgs
-\item Getting fmin\_bfgs to stop at the right spot, how to find the best value of $\sigma^2$ and $\alpha^2$? (now fixed with change in calc\_Qh ??)
-\item Why is the sign for $\frac{\delta S}{\delta u}$ wrong in the code.. fixed, now sign error in derivation
-\item Memory issues with fmin\_bfgs (seem ok with fortran bfgs)
-\item S and $\vv{S}{u}$ get very large with more timesteps.
-\end{itemize}
 
 
 \newpage
