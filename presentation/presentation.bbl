@@ -1,0 +1,83 @@
+\begin{thebibliography}{10}
+
+\bibitem{miller2001group}
+M.I. Miller and L.~Younes.
+\newblock Group actions, homeomorphisms, and matching: A general framework.
+\newblock {\em International Journal of Computer Vision}, 41(1):61--84, 2001.
+
+\bibitem{miller2009emerging}
+M.I. Miller and A.~Qiu.
+\newblock The emerging discipline of computational functional anatomy.
+\newblock {\em NeuroImage}, 45(1):S16--S39, 2009.
+
+\bibitem{mfca11}
+X.~Pennec, S.~Joshi, and M.~Nielsen, editors.
+\newblock {\em 3nd MICCAI Workshop on Mathematical Foundations of Computational
+  Anatomy}, Westin Harbour Castle, Toronto Canada, September 2011. MICCAI.
+
+\bibitem{beg2005computing}
+M.F. Beg, M.I. Miller, A.~Trouv{\'e}, and L.~Younes.
+\newblock Computing large deformation metric mappings via geodesic flows of
+  diffeomorphisms.
+\newblock {\em International Journal of Computer Vision}, 61(2):139--157, 2005.
+
+\bibitem{grenander1993general}
+U.~Grenander.
+\newblock {\em General Pattern Theory: A Mathematical Study of Regular
+  Structures}.
+\newblock Clarendon, 1993.
+
+\bibitem{bruveris2011momentum}
+M.~Bruveris, F.~Gay-Balmaz, DD~Holm, and T.S. Ratiu.
+\newblock The momentum map representation of images.
+\newblock {\em Journal of Nonlinear Science}, pages 1--36, 2011.
+
+\bibitem{glaunes2008large}
+J.~Glaunes, A.~Qiu, M.I. Miller, and L.~Younes.
+\newblock Large deformation diffeomorphic metric curve mapping.
+\newblock {\em International journal of computer vision}, 80(3):317--336, 2008.
+
+\bibitem{bauer2011new}
+M.~Bauer and M.~Bruveris.
+\newblock A new paradigm for surface registration.
+\newblock {\em Arxiv preprint arXiv:1106.0620}, 2011.
+
+\bibitem{michor2005vanishing}
+P.W. Michor and D.~Mumford.
+\newblock Vanishing geodesic distance on spaces of submanifolds and
+  diffeomorphisms.
+\newblock {\em Doc. Math}, 10:217--245, 2005.
+
+\bibitem{michor2003riemannian}
+P.W. Michor and D.~Mumford.
+\newblock Riemannian geometries on spaces of plane curves.
+\newblock {\em Arxiv preprint math/0312384}, 2003.
+
+\bibitem{younes2008metric}
+L.~Younes, P.W. Michor, J.~Shah, D.~Mumford, and R.~Lincei.
+\newblock A metric on shape space with explicit geodesics.
+\newblock {\em ATTI-ACCADEMIA NAZIONALE DEI LINCEI RENDICONTI LINCEI CLASSE DI
+  SCIENZE FISICHE MATEMAICHE E NATURALI SERIE 9 MATEMATICA E APPLICAZIONI},
+  19(1):25, 2008.
+
+\bibitem{logg2007fenics}
+A.~Logg, T.~Dupont, J.~Hoffman, C.~Johnson, RC~Kirby, MG~Larson, and LR~Scott.
+\newblock The fenics project, 2007.
+
+\bibitem{logg2007automated}
+A.~Logg.
+\newblock Automated solution of differential equations.
+\newblock {\em PAMM}, 7(1):1010601--1010602, 2007.
+
+\bibitem{byrd1995limited}
+R.H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu.
+\newblock A limited memory algorithm for bound constrained optimization.
+\newblock {\em SIAM Journal on Scientific Computing}, 16(5):1190--1208, 1995.
+
+\bibitem{clark2011reparam}
+A.~Clarke, C.J. Cotter, and J.~Peiro.
+\newblock A reparameterisation-based approach to geodesic shooting for curve
+  matching.
+\newblock {\em Interational Journal of Computer Vision (preprint)}, 2011.
+
+\end{thebibliography}

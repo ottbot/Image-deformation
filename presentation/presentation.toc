@@ -1,0 +1,22 @@
+\beamer@endinputifotherversion {3.10pt}
+\select@language {english}
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{What is computational anatomy?}{3}{0}{1}
+\beamer@subsectionintoc {1}{2}{The problem}{4}{0}{1}
+\beamer@subsectionintoc {1}{3}{Inner and outer metrics}{8}{0}{1}
+\beamer@sectionintoc {2}{Forumulation}{23}{0}{2}
+\beamer@subsectionintoc {2}{1}{Preliminaries}{24}{0}{2}
+\beamer@subsectionintoc {2}{2}{Constructing the functional}{26}{0}{2}
+\beamer@subsectionintoc {2}{3}{The functional derivative}{30}{0}{2}
+\beamer@sectionintoc {3}{Implementation}{33}{0}{3}
+\beamer@subsectionintoc {3}{1}{Discretisation}{33}{0}{3}
+\beamer@subsectionintoc {3}{2}{Finite elements}{37}{0}{3}
+\beamer@subsectionintoc {3}{3}{Optimisation algorithm}{38}{0}{3}
+\beamer@subsectionintoc {3}{4}{Procedure overview}{39}{0}{3}
+\beamer@subsectionintoc {3}{5}{Verification}{40}{0}{3}
+\beamer@sectionintoc {4}{Numerical experiments}{42}{0}{4}
+\beamer@subsectionintoc {4}{1}{Large deformation with curves and corners}{42}{0}{4}
+\beamer@subsectionintoc {4}{2}{Parmeterisation dependence}{43}{0}{4}
+\beamer@subsectionintoc {4}{3}{Shape classification}{45}{0}{4}
+\beamer@sectionintoc {5}{Conclusion}{50}{0}{5}
+\beamer@subsectionintoc {5}{1}{Outlook and suggestions}{50}{0}{5}
