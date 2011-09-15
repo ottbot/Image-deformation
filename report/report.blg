@@ -3,44 +3,46 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: report.aux
 The style file: unsrt.bst
 Database file #1: refs.bib
-You've used 7 entries,
+Warning--I didn't find a database entry for "cotter2009geodesc"
+You've used 28 entries,
             1791 wiz_defined-function locations,
-            494 strings with 4550 characters,
-and the built_in function-call counts, 1463 in all, are:
-= -- 129
-> -- 64
-< -- 0
-+ -- 24
-- -- 17
-* -- 98
-:= -- 246
-add.period$ -- 21
-call.type$ -- 7
-change.case$ -- 6
+            602 strings with 7523 characters,
+and the built_in function-call counts, 5878 in all, are:
+= -- 498
+> -- 302
+< -- 2
++ -- 111
+- -- 83
+* -- 393
+:= -- 957
+add.period$ -- 79
+call.type$ -- 28
+change.case$ -- 24
 chr.to.int$ -- 0
-cite$ -- 7
-duplicate$ -- 62
-empty$ -- 144
-format.name$ -- 17
-if$ -- 315
+cite$ -- 28
+duplicate$ -- 243
+empty$ -- 579
+format.name$ -- 83
+if$ -- 1287
 int.to.chr$ -- 0
-int.to.str$ -- 7
-missing$ -- 8
-newline$ -- 38
-num.names$ -- 7
-pop$ -- 17
+int.to.str$ -- 28
+missing$ -- 25
+newline$ -- 137
+num.names$ -- 29
+pop$ -- 92
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 24
+skip$ -- 106
 stack$ -- 0
-substring$ -- 99
-swap$ -- 7
-text.length$ -- 0
+substring$ -- 347
+swap$ -- 40
+text.length$ -- 2
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 14
-width$ -- 8
-write$ -- 76
+while$ -- 57
+width$ -- 30
+write$ -- 287
+(There was 1 warning)

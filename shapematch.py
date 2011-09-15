@@ -9,7 +9,6 @@ matplotlib.use("cairo")
 import matplotlib.pylab as plt
 
 import image_deformation as img
-import drawcurve
 
 
 
@@ -20,7 +19,7 @@ alpha = 0.001
 
 # try with this hand drawn star
 
-tmpl = np.genfromtxt("shape_match/test_blob.txt", unpack=True)
+tmpl = np.genfromtxt("shape_match/test_star.txt", unpack=True)
 
 
 results = []
@@ -34,7 +33,7 @@ for shape_file in glob.glob("shape_match/*.txt"):
         results.append([[shape_file, o[0][1]], o])
 
         o[1].plot_steps_held()
-        plt.savefig(shape_file.replace(".txt",".pdf"))
+        plt.savefig(shape_file.replace(".txt",".pdf"),bbox_inches='tight')
 
         print shape_file, o[0][1] #, o[0][1]
 

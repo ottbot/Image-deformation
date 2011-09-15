@@ -1,14 +1,73 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
+
+\bibitem{miller2001group}
+M.I. Miller and L.~Younes.
+\newblock Group actions, homeomorphisms, and matching: A general framework.
+\newblock {\em International Journal of Computer Vision}, 41(1):61--84, 2001.
 
 \bibitem{miller2009emerging}
 M.I. Miller and A.~Qiu.
 \newblock The emerging discipline of computational functional anatomy.
 \newblock {\em NeuroImage}, 45(1):S16--S39, 2009.
 
-\bibitem{cotter2006singular}
-C.J. Cotter and D.D. Holm.
-\newblock Singular solutions, momentum maps and computational anatomy.
-\newblock {\em Arxiv preprint nlin/0605020}, 2006.
+\bibitem{mfca11}
+X.~Pennec, S.~Joshi, and M.~Nielsen, editors.
+\newblock {\em 3nd MICCAI Workshop on Mathematical Foundations of Computational
+  Anatomy}, Westin Harbour Castle, Toronto Canada, September 2011. MICCAI.
+
+\bibitem{beg2005computing}
+M.F. Beg, M.I. Miller, A.~Trouv{\'e}, and L.~Younes.
+\newblock Computing large deformation metric mappings via geodesic flows of
+  diffeomorphisms.
+\newblock {\em International Journal of Computer Vision}, 61(2):139--157, 2005.
+
+\bibitem{grenander1993general}
+U.~Grenander.
+\newblock {\em General Pattern Theory: A Mathematical Study of Regular
+  Structures}.
+\newblock Clarendon, 1993.
+
+\bibitem{bruveris2011momentum}
+M.~Bruveris, F.~Gay-Balmaz, DD~Holm, and T.S. Ratiu.
+\newblock The momentum map representation of images.
+\newblock {\em Journal of Nonlinear Science}, pages 1--36, 2011.
+
+\bibitem{glaunes2008large}
+J.~Glaunes, A.~Qiu, M.I. Miller, and L.~Younes.
+\newblock Large deformation diffeomorphic metric curve mapping.
+\newblock {\em International journal of computer vision}, 80(3):317--336, 2008.
+
+\bibitem{bauer2011new}
+M.~Bauer and M.~Bruveris.
+\newblock A new paradigm for surface registration.
+\newblock {\em Arxiv preprint arXiv:1106.0620}, 2011.
+
+\bibitem{michor2005vanishing}
+P.W. Michor and D.~Mumford.
+\newblock Vanishing geodesic distance on spaces of submanifolds and
+  diffeomorphisms.
+\newblock {\em Doc. Math}, 10:217--245, 2005.
+
+\bibitem{michor2003riemannian}
+P.W. Michor and D.~Mumford.
+\newblock Riemannian geometries on spaces of plane curves.
+\newblock {\em Arxiv preprint math/0312384}, 2003.
+
+\bibitem{younes2008metric}
+L.~Younes, P.W. Michor, J.~Shah, D.~Mumford, and R.~Lincei.
+\newblock A metric on shape space with explicit geodesics.
+\newblock {\em ATTI-ACCADEMIA NAZIONALE DEI LINCEI RENDICONTI LINCEI CLASSE DI
+  SCIENZE FISICHE MATEMAICHE E NATURALI SERIE 9 MATEMATICA E APPLICAZIONI},
+  19(1):25, 2008.
+
+\bibitem{scipy}
+Eric Jones, Travis Oliphant, Pearu Peterson, et~al.
+\newblock {SciPy}: Open source scientific tools for {Python}, 2001--.
+
+\bibitem{cotter2009geodesic}
+CJ~Cotter and DD~Holm.
+\newblock Geodesic boundary value problems with symmetry.
+\newblock {\em Arxiv preprint arXiv:0911.2205}, 2009.
 
 \bibitem{cotter2009curves}
 C.J. Cotter.
@@ -16,15 +75,49 @@ C.J. Cotter.
 \newblock {\em Journal of Physics A: Mathematical and Theoretical}, 41:344003,
   2008.
 
-\bibitem{bauer2011new}
-M.~Bauer and M.~Bruveris.
-\newblock A new paradigm for surface registration.
-\newblock {\em Arxiv preprint arXiv:1106.0620}, 2011.
+\bibitem{clark2011reparam}
+A.~Clarke, C.J. Cotter, and J.~Peiro.
+\newblock A reparameterisation-based approach to geodesic shooting for curve
+  matching.
+\newblock {\em Interational Journal of Computer Vision (preprint)}, 2011.
 
-\bibitem{nocedal1999numerical}
-J.~Nocedal and S.J. Wright.
-\newblock {\em Numerical optimization}.
-\newblock Springer verlag, 1999.
+\bibitem{logg2007fenics}
+A.~Logg, T.~Dupont, J.~Hoffman, C.~Johnson, RC~Kirby, MG~Larson, and LR~Scott.
+\newblock The fenics project, 2007.
+
+\bibitem{logg2010dolfin}
+A.~Logg and G.N. Wells.
+\newblock Dolfin: Automated finite element computing.
+\newblock {\em ACM Transactions on Mathematical Software (TOMS)}, 37(2):20,
+  2010.
+
+\bibitem{dolfin}
+J.~Hake, A.~Logg, and G.N. Wells.
+\newblock Dolfin: A c++/python finite element library, 2011.
+
+\bibitem{ufl}
+M.S. Alnaes, A.~Logg, K.B. {\O}lgaard, M.E. Rognes, and G.N. Wells.
+\newblock Ufl: Unified form language, 2011.
+
+\bibitem{alnaes2009unified}
+M.S. Alnaes, A.~Logg, K.A. Mardal, and O.~Skavhaug.
+\newblock Unified framework for finite element assembly.
+\newblock {\em International Journal of Computational Science and Engineering},
+  4(4):231--244, 2009.
+
+\bibitem{fcc}
+A.~Logg, K.B. {\O}lgaard, and M.~Rognes.
+\newblock Ffc: The fenics form compiler, 2011.
+
+\bibitem{logg2007automated}
+A.~Logg.
+\newblock Automated solution of differential equations.
+\newblock {\em PAMM}, 7(1):1010601--1010602, 2007.
+
+\bibitem{hunter2007matplotlib}
+J.D. Hunter.
+\newblock Matplotlib: A 2d graphics environment.
+\newblock {\em Computing in Science \& Engineering}, pages 90--95, 2007.
 
 \bibitem{byrd1995limited}
 R.H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu.
@@ -37,5 +130,21 @@ C.~Zhu, R.H. Byrd, P.~Lu, and J.~Nocedal.
   bound-constrained optimization.
 \newblock {\em ACM Transactions on Mathematical Software (TOMS)},
   23(4):550--560, 1997.
+
+\bibitem{nocedal1999numerical}
+J.~Nocedal and S.J. Wright.
+\newblock {\em Numerical optimization}.
+\newblock Springer verlag, 1999.
+
+\bibitem{gonzalez2004digital}
+R.C. Gonzalez, R.E. Woods, and S.L. Eddins.
+\newblock {\em Digital image processing using MATLAB}.
+\newblock Pearson Education India, 2004.
+
+\bibitem{miller2006geodesic}
+M.I. Miller, A.~Trouv{\'e}, and L.~Younes.
+\newblock Geodesic shooting for computational anatomy.
+\newblock {\em Journal of Mathematical Imaging and Vision}, 24(2):209--228,
+  2006.
 
 \end{thebibliography}

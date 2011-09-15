@@ -1,0 +1,136 @@
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{vector}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[usenames, dvipsnames]{color}
+
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{ifthen}
+\usepackage{ifpdf}
+\usepackage{float} 
+
+%-->
+%--> Google.com search "hyperref options"
+%--> 
+%--> http://www.ai.mit.edu/lab/sysadmin/latex/documentation/latex/hyperref/manual.pdf
+%--> http://www.chemie.unibas.ch/~vogtp/LaTeX2PDFLaTeX.pdf 
+%--> http://www.uni-giessen.de/partosch/eurotex99/ oberdiek/print/sli4a4col.pdf
+%--> http://me.in-berlin.de/~miwie/tex-refs/html/latex-packages.html
+%-->
+\usepackage[ pdftex, plainpages = false, pdfpagelabels, 
+             pdfpagelayout = useoutlines,
+             bookmarks,
+             bookmarksopen = true,
+             bookmarksnumbered = true,
+             breaklinks = true,
+             linktocpage,
+             pagebackref,
+             colorlinks = false,
+             linkcolor = blue,
+             urlcolor  = blue,
+             citecolor = red,
+             anchorcolor = green,
+             hyperindex = true,
+             hyperfigures
+             ]{hyperref} 
+\usepackage{graphicx}
+%\pdfcompresslevel=9
+\DeclareGraphicsExtensions{.png, .jpg, .pdf}
+
+
+\pdfpageheight=297mm
+\pdfpagewidth=210mm
+
+\setlength{\hoffset}{0.00cm}
+\setlength{\voffset}{0.00cm}
+
+%\setlength{\evensidemargin}{1.96cm}
+%\setlength{\oddsidemargin}{-0.54cm}
+%% \setlength{\topmargin}{1mm}
+%% \setlength{\headheight}{1.36cm}
+%% \setlength{\headsep}{1.00cm}
+%% \setlength{\textheight}{20.84cm}
+%% \setlength{\textwidth}{14.5cm}
+%% \setlength{\marginparsep}{1mm}
+%% \setlength{\marginparwidth}{3cm}
+%% \setlength{\footskip}{2.36cm}
+
+
+% \pagestyle{fancy}
+% \renewcommand{\sectionmark}[1]{\markright{#1}{}}
+% \fancyhf{}
+% \fancyhead[RO]{\bfseries\rightmark}
+% \fancyhead[LE]{\bfseries\leftmark}
+% \fancyfoot[C]{\thepage}
+% \renewcommand{\headrulewidth}{0.5pt}
+% \renewcommand{\footrulewidth}{0pt}
+% \addtolength{\headheight}{0.5pt}
+% \fancypagestyle{plain}{
+%   \fancyhead{}
+%   \renewcommand{\headrulewidth}{0pt}
+% }
+
+
+
+% The year and term the degree will be officially conferred
+\def\degreedate#1{\gdef\@degreedate{#1}}
+% The full (unabbreviated) name of the degree
+\def\degree#1{\gdef\@degree{#1}}
+% The name of your college or department(eg. Trinity, Pembroke, Maths, Physics)
+\def\collegeordept#1{\gdef\@collegeordept{#1}}
+% The name of your University
+\def\university#1{\gdef\@university{#1}}
+% Defining the crest
+\def\crest#1{\gdef\@crest{#1}}
+
+
+%define title page layout
+\renewcommand{\maketitle}{%
+    \renewcommand{\footnotesize}{\small}
+    \renewcommand{\footnoterule}{\relax}
+    \thispagestyle{empty}
+%  \null\vfill
+  \begin{center}
+    { \Huge {\bfseries {Numerical Methods \\for Deforming Images}} \par}
+{\large \vspace*{25mm} {\includegraphics[width=35mm]{img/imperial_crest} \par} \vspace*{22mm}}
+    {{\Large \bfseries{\href{mailto:rjcrim@gmail.com}{Robert Crim}}} \par}
+{\large \vspace*{1ex}
+    {\href{http://www.ic.ac.uk/aeronautics}{Department of Aeronautics} \par}
+\vspace*{1ex}
+    {\href{http://www.ic.ac.uk}{Imperial College London} \par}
+\vspace*{20mm}
+    {\small Submitted in part fulfillment of the requirements for the degree of} \par}
+\vspace*{0.5ex}
+    {\large \it{Master of Science} \par}
+\vspace*{1ex}
+    {16 September 2011}
+  \end{center}
+  \null\vfill
+}
+
+
+\newcommand{\eq}[1]{(\ref{eq:#1})}
+\newcommand{\fig}[1]{Fig. \ref{fig:#1}}
+\newcommand{\vect}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\hvect}[1]{\ensuremath{\hat{\vect{#1}}}}
+
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\vv}[2]{\frac{\delta #1}{\delta #2}}
+\newcommand{\angles}[1]{\left\langle #1 \right\rangle}
+\newcommand{\eps}{\varepsilon}
+\setlength{\parskip}{.3cm}
+
+
+%\usepackage{mathpazo}
+%\usepackage[mathpazo]{flexisym}
+
+%\usepackage{breqn}
+
+%\graphicspath{{./img/}}
+
+% \pdfpagewidth=\paperwidth 
+% \pdfpageheight=\paperheight

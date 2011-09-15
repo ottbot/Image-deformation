@@ -110,38 +110,6 @@ class TestCurveOptimizer(unittest.TestCase):
                                  err_msg="derivative of sin(x) is not cos(x)")
 
 
-
-    def test_dolfin_coeff_init(self):
-        # mesh = dol.Interval(100, 0, 2*dol.pi)
-
-        # V = dol.VectorFunctionSpace(mesh, 'CG', 2, dim=2)
-
-        # Aexp = dol.Expression(('sin(x[0])','cos(x[0])'))
-        # A = dol.interpolate(Aexp, V)
-
-        # B = dol.Function(V)
-        
-
-        # intrvl = np.linspace(0,2*dol.pi,201)
-        # x, y = np.sin(intrvl), np.cos(intrvl)
-
-        # B.vector()[:] = np.append(x,y)
-
-        # Ax, Ay = self.split_xy_array(A)
-        # Bx, By = self.split_xy_array(B)
-
-        # plt.figure()
-        # plt.plot(Ax)
-        # plt.plot(Bx)
-        # #ordr = self.get_sort_order(V)        
-
-        # # the interpolated dolfin expression should be a concatination x y vectors
-        # # created with numpy
-        # npt.assert_allclose(A.vector().array(), B.vector().array(), rtol=1e-10, atol=1e-12, \
-        # #npt.assert_allclose(Ax[ordr], Bx[ordr], rtol=1e-10, atol=1e-12, \
-        #                         err_msg="Different methods of coeff init failed")
-        pass
-
     def test_template_target_does_not_change(self):
         im = Immersion(100,10)
         
@@ -216,8 +184,8 @@ class TestCurveOptimizer(unittest.TestCase):
                      
 
     def test_derivative(self):
-        N = 10
-        M = 500
+        N = 100
+        M = 10
 
         im = Immersion(M,N)
         
@@ -227,7 +195,7 @@ class TestCurveOptimizer(unittest.TestCase):
 
         U = np.zeros(im.mat_shape)
 
-        u_scaler = 0.2
+        u_scaler = 0.0
 
         for n in xrange(im.N):
             U[:,n] = u_scaler * u.vector().array()

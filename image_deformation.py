@@ -4,12 +4,10 @@ import os as os
 
 import numpy as np
 import scipy as sp
-#from scipy.optimize import fmin_bfgs
+
 from scipy.optimize import fmin_l_bfgs_b
 
 import matplotlib.pylab as plt
-
-
 
 class Immersion:
 
@@ -18,56 +16,53 @@ class Immersion:
     populated = False
 
 
-    def __init__(self, M= 100, N=10, qA=None, qB=None, alpha=None, sigma=None,  deg_cont = 2, deg_dis = 1):
-        self.M = M # number of nodal val
-        self.N = N # number of timesteps
+    def __init__(self,M=100, N=10, qA=None, qB=None, alpha=0.001, sigma=0.001,deg=2):
 
-        self.dt = 1./N
+        self.N = N
+        self.M = M
+        self.dt = 1./self.N
+
 
         self.mesh = Interval(self.M, 0, 2*pi)
-
-        self.dV = VectorFunctionSpace(self.mesh, 'DG', deg_cont - 1, dim=2)
-        self.V  = VectorFunctionSpace(self.mesh, 'CG', deg_cont, dim=2)
-
-        if alpha is None:
-            self.alpha_sq = 1.
-        else: 
-            self.alpha_sq = alpha**2
-
-        if sigma is None:
-            self.sigma_sq = 1.
-        else:
-            self.sigma_sq = sigma**2
+        self.V  = VectorFunctionSpace(self.mesh, 'CG', deg, dim=2)
 
 
-        # Template
-        if qA is None:        
-            #self.qA_exp = Expression(('sin(x[0] + 1)','cos(x[0] + 2)'))
+        self.alpha_sq = alpha**2
+        self.sigma_sq = sigma**2
+
+
+        if qA is None:          # then use a default qA
             self.qA_exp = Expression(('100*sin(x[0])','100*cos(x[0])'))
             self.qA = interpolate(self.qA_exp, self.V)
         else:
-            self.qA = Function(self.V)
-            self.qA.vector()[:] = qA
+            if isinstance(qA,tuple):
+                self.qA_exp = Expression(qA)
+                self.qA = interpolate(self.qA_exp, self.V)
+            else:
+                self.qA = Function(self.V)
+                self.qA.vector()[:] = qA
 
 
-        # Target
-        if qB is None:
-            self.qB_exp = Expression(('100*sin(x[0])','100*cos(x[0] - 2)'))
-            #self.qB_exp = Expression(('1.5*sin(x[0])','0.8*cos(x[0])'))
+        if  qB is None:         # then use a default qB
+            self.qB_exp = Expression(('50*sin(x[0])','50*cos(x[0])'))
             self.qB = interpolate(self.qB_exp, self.V)
         else:
-            self.qB = Function(self.V)
-            self.qB.vector()[:] = qB
-            
+            if isinstance(qB,tuple):
+                self.qB_exp = Expression(qB)
+                self.qB = interpolate(self.qB_exp, self.V)
+            else:
+                self.qB = Function(self.V)
+                self.qB.vector()[:] = qB
+
 
         # Determine axis lims for plotting
         minA, maxA = np.min(self.qA.vector().array()), np.max(self.qA.vector().array())
         minB, maxB = np.min(self.qB.vector().array()), np.max(self.qB.vector().array())
 
         mins = minA if minA < minB else minB
-        maxs = maxA if maxA < maxB else maxB
+        maxs = maxA if maxA > maxB else maxB
 
-        pad = 1*np.abs((maxs/mins))
+        pad = np.abs((maxs-mins)/6)
         
         lbnd = int(round(mins - pad,-1))
         ubnd = int(round(maxs + pad,-1))
@@ -115,16 +110,19 @@ class Immersion:
 
     def j(self, q):
         return  sqrt(inner(q.dx(0),q.dx(0)))
-        # V = FunctionSpace(self.mesh, 'CG', 1)
-        # j = inner(q.dx(0),q.dx(0))
-        # pj = project(j,V)
-        # return np.sqrt(np.sum(pj.vector().array()))
 
+
+
+    "Calculate the functional S for a given velocity, by combining metric and penalty terms"
     def calc_S(self, U):
         if not self.populated:
             self.populate_arrays(U) 
 
-        S = 0
+        return self.metric() + self.penalty()
+        
+    "The metric term"
+    def metric(self):
+        E = 0
 
         q = Function(self.V)
         u = Function(self.V)
@@ -136,16 +134,17 @@ class Immersion:
             j = self.j(q)
 
             a = inner(u,u)*j*dx + self.alpha_sq*(inner(u.dx(0), u.dx(0))/j)*dx
-            S += 0.5*assemble(a)*self.dt
+            E += 0.5*assemble(a)*self.dt
 
+        return E
+
+    "The penalty term"
+    def penalty(self):
         diff = self.Q[-1] - self.qB
-        
-        err = (1/(2*self.sigma_sq))*assemble(inner(diff,diff)*dx)
+        return 1/(2*self.sigma_sq)*assemble(inner(diff,diff)*dx)
 
-        #print S, ' ', err
-        return S + err
 
-            
+    "Calcuate the adjoint at t=1"
     def qh_at_t1(self):
         # Find q hat at t = 1
         p = TestFunction(self.V)
@@ -184,10 +183,8 @@ class Immersion:
             q.assign(self.Q[n])
             j = self.j(q)
 
-            #c = 0.5*(inner(u,u)/j - (self.alpha_sq)*inner(u.dx(0),u.dx(0))/j**3)
             c = 0.5*(inner(u,u)/j - (self.alpha_sq)*self.j(u)**2/j**3)
 
-            ## -- CHANGED -> qh.dx(0) to q.dx(0)
             L = inner(p,qh)*dx - inner(c*p.dx(0),q.dx(0))*self.dt*dx
             
             b = assemble(L)
@@ -259,7 +256,8 @@ class Immersion:
         return C
 
     def new_figure(self):
-        plt.figure()
+        f = plt.figure()
+        f.subplots_adjust(bottom=0.1,top=0.97,left=0.06,right=0.98)
         plt.axis(self.axis_bounds)
         ax = plt.gca()
         ax.set_aspect(1)
@@ -274,7 +272,7 @@ class Immersion:
         self.new_figure()
 
         plt.plot(*self.split_array(self.qA),ls="--")
-        plt.plot(*self.split_array(self.Q[n]))
+        plt.plot(*self.split_array(self.Q[n]),color='r')
 
 
 
@@ -292,6 +290,31 @@ class Immersion:
 
         plt.plot(x,y)
         plt.quiver(x,y,-u,-v,color=C)
+        #plt.plot(*self.split_array(self.qA),color='grey',ls=':')
+        plt.plot(*self.split_array(self.qB),color='grey',ls=':')
+
+
+    def plot_path(self, sample_step = 1):
+        idx = np.arange(0,(self.template_size / 2), sample_step)
+
+        qx, qy = self.split_array(self.qA)
+        paths = dict([(i,([qx[i]],[qy[i]])) for i in idx])
+
+
+        for q in self.Q:
+            qx, qy = self.split_array(q)
+            for k,v in paths.iteritems():
+                v[0].append(qx[k])
+                v[1].append(qy[k])
+        
+
+        self.new_figure()
+        plt.plot(*self.split_array(self.qA),ls='-',lw=2,color='b')
+
+        for k,v in paths.iteritems():
+            plt.plot(*v,color='r')
+
+        plt.plot(*self.split_array(self.qB),ls='-',lw=2,color='g')        
         
 
     def plot_no_split(self,Q):
@@ -336,8 +359,6 @@ class Immersion:
             plt.plot(*self.split_array(q),ls=':')
 
 
-
-
     # utility functions
     def split_array(self,q):
         if isinstance(q, np.ndarray):
@@ -358,41 +379,46 @@ class Immersion:
 
 #------------------------
 
-def template_size(M, N):
-    return Immersion(M,N).template_size
 
-def S(U, M, N, qA, qB, alpha, sigma):
-    im = Immersion(M, N, qA, qB, alpha, sigma)
+def template_size(**kwargs):
+    return Immersion(**kwargs).template_size
+
+def S(U, *args):
+    kwargs = args[0] #hack to get kwargs back out..
+    im = Immersion(**kwargs)
     return im.calc_S(U)
 
-def dS(U, M, N, qA, qB, alpha, sigma):
-    im = Immersion(M, N, qA, qB, alpha, sigma)
+def dS(U, *args):
+    kwargs = args[0] #hack to get kwargs back out..
+    im = Immersion(**kwargs)
     return im.calc_dS(U)
 
 
-def minimize(M = 100, N = 20, qA=None, qB=None, alpha=None, sigma=None, U = False):
-    im = Immersion(M, N, qA, qB, alpha, sigma)
+"Run a minimisation, takes the arguments needed to setup an Immersion class"
+def minimize(**kwargs):
+    im = Immersion(**kwargs)
+    U = np.zeros(im.vec_size)
 
-    if U is False:
-        U = np.zeros(im.vec_size)
+    opt = fmin_l_bfgs_b(S, U, fprime=dS, args=[kwargs]) 
 
-    opt = fmin_l_bfgs_b(S, U, fprime=dS, args=(M,N,qA,qB,alpha,sigma))
-    
-
-    m = Immersion(M, N, qA, qB, alpha, sigma)
-
+    im = Immersion(**kwargs)
     im.calc_S(opt[0])
-
-
-    #U = np.reshape(opt[0], im.mat_shape)
-    #np.savetxt("min_u.txt", U, fmt="%12.6G")
 
     return [opt, im]
 
+"Run a minimisation, takes the arguments needed to setup an Immersion class"
+def minimise(**kwargs):
+    return minimize(**kwargs)
 
 
-def run_case(casename, alpha=0.001, sigma=0.001,M=100,N=10):
+#------- TODO: move these to external module..
 
+"""
+This will run a test case from a directory in cases. 
+This must contain qa.txt and qb.txt, and you'll need to pass
+M if it differs from the defaults of M=100 (or you'll get an error)
+"""
+def run_case(casename, **kwargs):
     #read tmpl, targ from files
     case = "cases/" + casename + "/"
 
@@ -400,36 +426,37 @@ def run_case(casename, alpha=0.001, sigma=0.001,M=100,N=10):
         targ = np.genfromtxt(case + "qb.txt", unpack=True)
         tmpl = np.genfromtxt(case + "qa.txt", unpack=True)
         
-        o = minimize(M, N, tmpl,targ,alpha,sigma)
+        o = minimize(qA=tmpl,qB=targ, **kwargs)
 
         print "case ", case, "S = ", o[0][1]
         im = o[1]
 
-        for n in xrange(N):
+        for n in xrange(im.N):
             im.plot(im.Q[n])
-            plt.savefig("%sq_%d.pdf" % (case, n))
-
+            plt.savefig("%sq_%d.pdf" % (case, n),bbox_inches='tight')
 
             im.plot_step(n)
-            plt.savefig("%sstep_%d.pdf" % (case, n))
+            plt.savefig("%sstep_%d.pdf" % (case, n),bbox_inches='tight')
 
             im.plot_quiver(n)
-            plt.savefig("%squiver_%d.pdf" % (case, n))
-
+            plt.savefig("%squiver_%d.pdf" % (case, n),bbox_inches='tight')
 
             
         im.plot_steps_held()
-        plt.savefig(case+"steps.pdf")
+        plt.savefig(case+"steps.pdf",bbox_inches='tight')
 
         im.plot(im.qA)
-        plt.savefig(case+"qa.pdf")
+        plt.savefig(case+"qa.pdf",bbox_inches='tight')
 
         im.plot(im.qB)
-        plt.savefig(case+"qb.pdf")
+        plt.savefig(case+"qb.pdf",bbox_inches='tight')
 
         im.plot_qAqB()
-        plt.savefig(case+"qaqb.pdf")
+        plt.savefig(case+"qaqb.pdf",bbox_inches='tight')
 
+
+        im.plot_path(1)
+        plt.savefig(case+"path.pdf",bbox_inches='tight')
 
         np.savetxt(case+"u.txt", o[0][0], fmt="%12.6G")
 
@@ -460,17 +487,51 @@ def load_case(casename):
         raise OSError, "That case does not exist, or has no been run yet."
 
 
-def U_from_file(filename="min_u.txt"):
-    #TODO.. determine M,N from file (reshape pre-save)
-    U = np.genfromtxt(filename, unpack=True)
+def deg_test(degs):
+    case = "deg_test"
 
-    N,M = np.shape(U)
+    ims = []
 
-    M = (M-2)/4
+    for d in degs:
+        print d
+        targ = np.genfromtxt("%s/%d_qb.txt" % (case,d), unpack=True)
+        tmpl = np.genfromtxt("%s/%d_qa.txt" % (case,d), unpack=True)
+
+        print np.shape(tmpl)
+        print np.shape(targ)
+
+        opt = minimize(qA=tmpl,qB=targ,deg=d)
+
+        opt[1].plot_steps_held()
+        ims.append(opt)
+
+    return ims
+
+def run_reparm(M=100,N=10):
+    case = "reparams"
+
+    qa = ('100*sin(x[0])','100*cos(x[0])')
+    qb1 = ('50*sin(x[0])','50*cos(x[0])')
+
+    qb2 = ('50*sin(x[0]+pi/4.)','50*cos(x[0]+pi/4.)')
+    qb3 = ('50*sin(2*x[0])','50*cos(2*x[0])')
+    qb4 = ('50*cos(x[0])','50*sin(x[0])')
     
-    im = Immersion(M,N)
 
-    im.calc_S(U)
-    return im
+    opts = []
+
+    for i, qb in enumerate([qb1,qb2,qb3,qb4]):
+        o = minimise(M=M, N=N, qA=qa, qB=qb)
+
+        print "Reparam ", i, " S = ",o[0][1]
+        o[1].plot_steps_held()
+        plt.savefig("%s/steps_%d.pdf" % (case, i),bbox_inches='tight')
+
+        o[1].plot_path(3)
+        plt.savefig("%s/path_%d.pdf" % (case, i),bbox_inches='tight')
+
+        opts.append(o)
+
+    return opts
 
 

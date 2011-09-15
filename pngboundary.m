@@ -23,8 +23,11 @@ function vec = pngboundary(name, vsize)
         BW = im2bw(grayImage,level);  %# Create binary image
     end
     
+    
     BW = flipud(BW);
+    %figure()
     %imshow(BW)
+    
     
     [B,L,N] = bwboundaries(BW);
     
@@ -54,8 +57,7 @@ function vec = pngboundary(name, vsize)
     
     txtname = sprintf('%s.txt', name);
     
-    %figure()
-    %imshow(BW)
+
     figure()
     plot(x,y)
     

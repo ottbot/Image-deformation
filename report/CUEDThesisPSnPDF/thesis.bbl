@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{texbook}
+{\sc Donald~E. Knuth}.
+\newblock {\em The {{\TeX}book}}.
+\newblock Addison-Wesley, 1984.
+
+\bibitem{latex}
+{\sc Leslie Lamport}.
+\newblock {\em {\LaTeX:} {A} Document Preparation System}.
+\newblock Addison-Wesley, 1986.
+
+\bibitem{Rud73}
+{\sc W.~Rudin}.
+\newblock {\em Functional {Analysis}}.
+\newblock McGraw-Hill, New York, 1973.
+
+\end{thebibliography}
