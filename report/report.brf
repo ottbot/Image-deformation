@@ -5,26 +5,28 @@
 \backcite {beg2005computing,bruveris2011momentum,glaunes2008large}{{1}{1}{section.1}}
 \backcite {bauer2011new}{{1}{1}{section.1}}
 \backcite {michor2005vanishing,michor2003riemannian,younes2008metric}{{1}{1}{section.1}}
-\backcite {scipy}{{2}{1}{figure.caption.2}}
-\backcite {cotter2009geodesic, cotter2009curves, clark2011reparam}{{3}{1}{figure.caption.2}}
+\backcite {bauer2011new}{{2}{1}{section.1}}
+\backcite {scipy}{{2}{1}{figure.caption.3}}
+\backcite {cotter2009geodesic, cotter2009curves, clark2011reparam}{{3}{1}{figure.caption.3}}
 \backcite {bauer2011new}{{4}{2}{equation.2.3}}
 \backcite {bauer2011new}{{4}{2}{equation.2.4}}
-\backcite {logg2007fenics}{{8}{4}{section.4}}
-\backcite {logg2010dolfin}{{9}{4.1}{subsection.4.1}}
-\backcite {dolfin}{{9}{4.1}{subsection.4.1}}
+\backcite {logg2007fenics}{{9}{4}{section.4}}
+\backcite {logg2010dolfin}{{10}{4.1}{subsection.4.1}}
+\backcite {dolfin}{{10}{4.1}{subsection.4.1}}
 \backcite {ufl}{{10}{4.1}{subsection.4.1}}
 \backcite {alnaes2009unified}{{10}{4.1}{subsection.4.1}}
 \backcite {fcc}{{10}{4.1}{subsection.4.1}}
 \backcite {logg2007automated}{{10}{4.1}{subsection.4.1}}
 \backcite {scipy}{{10}{4.1}{subsection.4.1}}
 \backcite {hunter2007matplotlib}{{10}{4.1}{subsection.4.1}}
-\backcite {byrd1995limited}{{10}{4.2}{subsection.4.2}}
-\backcite {zhu1997algorithm}{{10}{4.2}{subsection.4.2}}
+\backcite {byrd1995limited}{{11}{4.2}{subsection.4.2}}
+\backcite {zhu1997algorithm}{{11}{4.2}{subsection.4.2}}
 \backcite {nocedal1999numerical}{{11}{4.2}{subsection.4.2}}
-\backcite {nocedal1999numerical}{{11}{4.2}{subsection.4.2}}
-\backcite {nocedal1999numerical}{{11}{4.2}{subsection.4.2}}
-\backcite {nocedal1999numerical}{{11}{4.2}{subsection.4.2}}
-\backcite {gonzalez2004digital}{{13}{5}{section.5}}
-\backcite {cotter2009geodesic}{{24}{6}{section.6}}
-\backcite {clark2011reparam}{{24}{6}{section.6}}
-\backcite {miller2006geodesic, cotter2009geodesic, clark2011reparam}{{25}{6}{section.6}}
+\backcite {nocedal1999numerical}{{12}{4.2}{subsection.4.2}}
+\backcite {nocedal1999numerical}{{12}{4.2}{subsection.4.2}}
+\backcite {nocedal1999numerical}{{12}{4.2}{subsection.4.2}}
+\backcite {gonzalez2004digital}{{14}{5}{section.5}}
+\backcite {cotter2009geodesic}{{25}{6}{section.6}}
+\backcite {clark2011reparam}{{25}{6}{section.6}}
+\backcite {miller2006geodesic, cotter2009geodesic, clark2011reparam}{{26}{6}{section.6}}
+\backcite {bauer2011new}{{26}{6}{section.6}}

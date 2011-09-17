@@ -1,1 +1,39 @@
 \select@language {english}
+\contentsline {figure}{\numberline {1}{\ignorespaces Inner versus outer metrics}}{2}{figure.caption.3}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Inner metrics }}}{2}{subfigure.1.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Outer metrics }}}{2}{subfigure.1.2}
+\contentsline {figure}{\numberline {2}{\ignorespaces Implementation convergence test results}}{13}{figure.caption.4}
+\contentsline {figure}{\numberline {3}{\ignorespaces Evolution of a curve from the template to target}}{15}{figure.caption.5}
+\contentsline {figure}{\numberline {4}{\ignorespaces Self intersection of the curve}}{16}{figure.caption.6}
+\contentsline {figure}{\numberline {5}{\ignorespaces Reparameterisation of the target curve}}{17}{figure.caption.7}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {$f(s)$ }}}{17}{subfigure.5.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {$g(s)$ }}}{17}{subfigure.5.2}
+\contentsline {subfigure}{\numberline {(c)}{\ignorespaces {$h(s)$ }}}{17}{subfigure.5.3}
+\contentsline {subfigure}{\numberline {(d)}{\ignorespaces {$k(s)$ }}}{17}{subfigure.5.4}
+\contentsline {figure}{\numberline {6}{\ignorespaces Average shape between a template and target}}{18}{figure.caption.9}
+\contentsline {figure}{\numberline {7}{\ignorespaces Hand drawn test image}}{19}{figure.caption.10}
+\contentsline {figure}{\numberline {8}{\ignorespaces Database of known shapes}}{19}{figure.caption.11}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {}}}{19}{subfigure.8.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {}}}{19}{subfigure.8.2}
+\contentsline {subfigure}{\numberline {(c)}{\ignorespaces {}}}{19}{subfigure.8.3}
+\contentsline {subfigure}{\numberline {(d)}{\ignorespaces {}}}{19}{subfigure.8.4}
+\contentsline {subfigure}{\numberline {(e)}{\ignorespaces {}}}{19}{subfigure.8.5}
+\contentsline {subfigure}{\numberline {(f)}{\ignorespaces {}}}{19}{subfigure.8.6}
+\contentsline {subfigure}{\numberline {(g)}{\ignorespaces {}}}{19}{subfigure.8.7}
+\contentsline {subfigure}{\numberline {(h)}{\ignorespaces {}}}{19}{subfigure.8.8}
+\contentsline {figure}{\numberline {9}{\ignorespaces Results of matching the test shape against the database}}{20}{figure.caption.12}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {$S = 8.92$}}}{20}{subfigure.9.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {$S = 14.30$}}}{20}{subfigure.9.2}
+\contentsline {subfigure}{\numberline {(c)}{\ignorespaces {$S = 6.05$}}}{20}{subfigure.9.3}
+\contentsline {subfigure}{\numberline {(d)}{\ignorespaces {$S = 23.84$}}}{20}{subfigure.9.4}
+\contentsline {subfigure}{\numberline {(e)}{\ignorespaces {Match: $S = 1$}}}{20}{subfigure.9.5}
+\contentsline {subfigure}{\numberline {(f)}{\ignorespaces {$S = 8.93$}}}{20}{subfigure.9.6}
+\contentsline {subfigure}{\numberline {(g)}{\ignorespaces {$S = 12.31$}}}{20}{subfigure.9.7}
+\contentsline {subfigure}{\numberline {(h)}{\ignorespaces {$S = 16.48$}}}{20}{subfigure.9.8}
+\contentsline {figure}{\numberline {10}{\ignorespaces Example of serif and sans-serif typefaces}}{21}{figure.caption.13}
+\contentsline {figure}{\numberline {11}{\ignorespaces Successful typeface classification}}{22}{figure.caption.14}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Helvetica $\rightarrow $ Arial}}}{22}{subfigure.11.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Helvetica $\rightarrow $ Times New Roman}}}{22}{subfigure.11.2}
+\contentsline {figure}{\numberline {12}{\ignorespaces Unsuccessful typeface classification}}{23}{figure.caption.15}
+\contentsline {subfigure}{\numberline {(a)}{\ignorespaces {Times New Roman $\rightarrow $ Arial}}}{23}{subfigure.12.1}
+\contentsline {subfigure}{\numberline {(b)}{\ignorespaces {Times New Roman $\rightarrow $ Sabon}}}{23}{subfigure.12.2}

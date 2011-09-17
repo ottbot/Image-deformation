@@ -1,13 +1,14 @@
+\select@language {english}
 \contentsline {section}{\numberline {1}Introduction}{1}{section.1}
 \contentsline {section}{\numberline {2}Mathematical formulation }{3}{section.2}
 \contentsline {section}{\numberline {3}Discretisation}{7}{section.3}
-\contentsline {section}{\numberline {4}Numerical scheme}{8}{section.4}
-\contentsline {subsection}{\numberline {4.1}Implementation in FEniCS}{9}{subsection.4.1}
-\contentsline {subsection}{\numberline {4.2}L-BFGS minimisation algorithm}{10}{subsection.4.2}
+\contentsline {section}{\numberline {4}Numerical scheme}{9}{section.4}
+\contentsline {subsection}{\numberline {4.1}Implementation in FEniCS}{10}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}L-BFGS minimisation algorithm}{11}{subsection.4.2}
 \contentsline {subsection}{\numberline {4.3}Code verification}{12}{subsection.4.3}
 \contentsline {section}{\numberline {5}Numerical experiments}{13}{section.5}
 \contentsline {subsection}{\numberline {5.1}Application demonstrations}{18}{subsection.5.1}
-\contentsline {subsubsection}{\numberline {5.1.1}Shape identification}{18}{subsubsection.5.1.1}
-\contentsline {subsubsection}{\numberline {5.1.2}Typeface classification }{19}{subsubsection.5.1.2}
+\contentsline {subsubsection}{\numberline {5.1.1}Shape identification}{19}{subsubsection.5.1.1}
+\contentsline {subsubsection}{\numberline {5.1.2}Typeface classification }{21}{subsubsection.5.1.2}
 \contentsline {section}{\numberline {6}Conclusions}{23}{section.6}
-\contentsline {section}{References}{26}{section.6}
+\contentsline {section}{References}{27}{section.6}

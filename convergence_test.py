@@ -3,6 +3,9 @@ import numpy as np
 
 import scipy as sp
 
+import matplotlib
+matplotlib.use('cairo')
+
 import matplotlib.pylab as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -32,9 +35,7 @@ dSarr = np.reshape(im.calc_dS(U),im.mat_shape)
 vdS = 0
 
 #v = dol.Expression(('cos(x[0])/2.0','cos(x[0])/2.0'))
-v = dol.Expression(('pow(x[0],2.0)/2.0','pow(x[0],2)/2.0'))
-#v = dol.Expression(('x[0]','x[0]'))
-#v = dol.Expression(('x[0]*0.001','x[0]*0.001'))
+v = dol.Expression(('pow(x[0],2.0)/100.0','pow(x[0],3)/100.0'))
 v = dol.interpolate(v, im.V)
 
 
@@ -113,13 +114,11 @@ o2_lims = lims
 E1 = [abs(abs(l) - abs(vdS)) for l in o1_lims]
 E2 = [abs(abs(l) - abs(vdS)) for l in o2_lims]
 
-
-
 plt.figure()
 
 
-plt.loglog(eps,E1, label="First order")
-plt.loglog(eps,E2, label="Second order")
+plt.loglog(eps,E1, label="$E_1$ (First order)")
+plt.loglog(eps,E2, label="$E_2$ (Second order)")
 plt.legend()
 plt.xlim((10**(-13),1))
 
@@ -142,46 +141,19 @@ patch = patches.PathPatch(path, facecolor='none', lw=1,edgecolor="grey")
 ax = plt.gca()
 ax.add_patch(patch)
 
-
-
-#np.log10(b) + (np.log10(a) - np.log10(b))/2
-
 t1x = 10**(np.log10(verts[0][0]) + np.log10(verts[1][0]/verts[0][0])/2.)
 t1y = 10**(np.log10(verts[0][1])-0.2)
-
-
 
 t2x = 10**(np.log10(verts[1][0])+0.1)
 t2y = 10**(np.log10(verts[1][1]) + np.log10(verts[2][1]/verts[1][1])/2.)
 
-
 ax.text(t1x,t1y,"1")
 ax.text(t2x,t2y,"1")
-#ax.text(verts[1][0]/10**0.5, verts[2][1] -  verts[1][1], "1")
 
 plt.xlabel("$\epsilon$")
-plt.ylabel("Error $E$")
+plt.ylabel("Error")
 plt.grid(True)
 
 plt.draw()
 
-
-#a = []
-#c = []
-
-#E = [abs(abs(l) - abs(vdS)) for l in lims]
-
-#plt.figure()
-#plt.plot(E)
-
-# for i in xrange(1,eps.size-2):
-#     epsA = eps[i-1]
-#     epsB = eps[i]
-
-#     EA = abs(abs(lims[i-1]) - abs(vdS))
-#     EB = abs(abs(lims[i]) - abs(vdS))
-
-#     a.append(np.log(EB/EA)/np.log(epsA/epsB))
-
-#plt.figure()
-#plt.plot(a)
+plt.savefig("code_error.pdf")

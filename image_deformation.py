@@ -144,14 +144,15 @@ class Immersion:
         return 1/(2*self.sigma_sq)*assemble(inner(diff,diff)*dx)
 
 
-    "Calcuate the adjoint at t=1"
+    "Calcuate the q hat at t=1"
     def qh_at_t1(self):
         # Find q hat at t = 1
         p = TestFunction(self.V)
         qh1 = TrialFunction(self.V)
 
         a = inner(p,qh1)*dx
-        # fixed this sign:
+        # NOTE: This L should have opposite sign, but doing so flips the sign
+        # of the resulting dSdu.. So there's probably a sign error somewhere else!
         L = 1.0/self.sigma_sq * inner(p,self.Q[-1] - self.qB)*dx
 
         A = assemble(a)
