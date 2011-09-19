@@ -9,20 +9,50 @@ from scipy.optimize import fmin_l_bfgs_b
 
 import matplotlib.pylab as plt
 
+
 class Immersion:
+    """ Performs a deformation of an image given a velocity field """
 
     # flag to test if the arrays of U,Q, Qh need to be populated
-    # call populate_arrays if so 
+    # call populate_arrays if so. This is used so S and dS can be calculated independently
     populated = False
 
 
     def __init__(self,M=100, N=10, qA=None, qB=None, alpha=0.001, sigma=0.001,deg=2):
+        """ Initializes a new immersion class, with named arguments
+
+        M: Number of spatial interval cells
+        N: Number of time steps
+        qA: Array of the template shape (x and y concatenated), 
+              *or* a tuple containing a string expression for x and y dims.
+        qB: Array of the target shape (x and y concatenated), 
+              *or* a tuple containing a string expression for x and y dims.
+        alpha: The alpha constant
+        sigma: Yep, it's the the sigma constant
+        deg: The degree of the Lagrange finite elements polynomial
+
+
+        ===========
+        After initialising an Immersion class, you pass the velocity when
+        calling the calc_S() or calc_dS() methods -- either of which will
+        calculate Q
+
+
+        These the same arguments are used to run the optimisation problem, you can
+        pass them to the module method minimize() to find the U to give the miminum S 
+        and geodesic Q.
+
+        In most cases, you don't actually initialize an Immersion class, just use the minimize() 
+        method
+        """
+        
 
         self.N = N
         self.M = M
         self.dt = 1./self.N
 
 
+        # Interval from 0 to 2pi, divided into M cells
         self.mesh = Interval(self.M, 0, 2*pi)
         self.V  = VectorFunctionSpace(self.mesh, 'CG', deg, dim=2)
 
@@ -84,6 +114,8 @@ class Immersion:
 
  
     def calc_Q(self):
+        """Calculates the progression of q after the velocity field has been set."""
+
         r = TestFunction(self.V)
         q_next = TrialFunction(self.V)
 
@@ -93,8 +125,7 @@ class Immersion:
         q_next = Function(self.V)   # the unknown at a new time level
         q = Function(self.V)
 
-        #initial Q
-
+        #initial q at t=0 is qA
         q.assign(self.qA)
 
         for n in xrange(self.N):
@@ -109,19 +140,25 @@ class Immersion:
 
 
     def j(self, q):
+        """ Gives |dq/ds| """
         return  sqrt(inner(q.dx(0),q.dx(0)))
 
 
 
-    "Calculate the functional S for a given velocity, by combining metric and penalty terms"
+
     def calc_S(self, U):
+        """
+        Calculate the functional S for a given velocity U
+        by combining metric and penalty terms
+        """
         if not self.populated:
             self.populate_arrays(U) 
 
         return self.metric() + self.penalty()
         
-    "The metric term"
+
     def metric(self):
+        """ The metric term of S"""
         E = 0
 
         q = Function(self.V)
@@ -138,15 +175,16 @@ class Immersion:
 
         return E
 
-    "The penalty term"
+
     def penalty(self):
+        """The penalty term, or matching functional, of S."""
         diff = self.Q[-1] - self.qB
         return 1/(2*self.sigma_sq)*assemble(inner(diff,diff)*dx)
 
 
-    "Calcuate the q hat at t=1"
+
     def qh_at_t1(self):
-        # Find q hat at t = 1
+        """Calcuates the q hat at t=1"""     
         p = TestFunction(self.V)
         qh1 = TrialFunction(self.V)
 
@@ -165,6 +203,7 @@ class Immersion:
 
     
     def calc_Qh(self):
+        """ Solve q hat at each timestep """
         qh = self.qh_at_t1() 
 
         # Find q hat at each time step by stepping backwards in time from qh1
@@ -198,6 +237,8 @@ class Immersion:
 
         
     def calc_dS(self, U):
+        """ Find dS/du, the gradient of S, at each time step for a given velocity """
+
         if not self.populated:
             self.populate_arrays(U) 
         
@@ -225,15 +266,20 @@ class Immersion:
             #mf = Function(self.V, f)
 
             #self.dS[n].assign(dS)
+
             self.dS[n].vector()[:] = dS.vector().array()
             
         return np.reshape(self.coeffs_to_matrix(self.dS), self.vec_size)
         
 
-    def need_to_repopulate(self, xk):
-        self.populated = False
-
     def populate_arrays(self, U):
+        """ 
+        Convert the inputted matrix/vector of velocity U to UFL form, 
+        and calculate q and q hat at each time step.
+
+        This happens when calc_S() or calc_dS() is called (usually at
+        each iteration of the optimizer)
+        """
         self.U = self.matrix_to_coeffs(np.reshape(U, self.mat_shape))
         self.calc_Q()
         self.calc_Qh()
@@ -241,6 +287,12 @@ class Immersion:
         
 
     def coeffs_to_matrix(self, C):
+        """ 
+        Convert an array representing a  UFL coefficient form
+        at each time step to a numpy matrix (each column is a vector
+        of the values at a particular timestep)
+        """
+
         mat = np.zeros(self.mat_shape)
 
         for n in xrange(self.N):
@@ -249,6 +301,12 @@ class Immersion:
         return mat
 
     def matrix_to_coeffs(self, mat):
+        """ 
+        Convert a numpy matrix (each column is a vector
+        of the values at a particular timestep) to an array representing 
+        a UFL coefficient form at each timestep
+        """
+
         C =  [Function(self.V) for i in xrange(self.N)]
 
         for n in xrange(self.N):
@@ -256,7 +314,11 @@ class Immersion:
 
         return C
 
+    #-------------------- Plotting utils
+
+
     def new_figure(self):
+        """ New figure with precalcuated axis bounds and aspect 1"""
         f = plt.figure()
         f.subplots_adjust(bottom=0.1,top=0.97,left=0.06,right=0.98)
         plt.axis(self.axis_bounds)
@@ -266,10 +328,16 @@ class Immersion:
 
 
     def plot(self, Q):
+        """ 
+        Plot a single curve q, or anything else, because
+        this splits the curve into x and y, then does plot(x,y)
+        it's probably only useful for curves
+        """
         self.new_figure()
         plt.plot(*self.split_array(Q))
 
     def plot_step(self, n):
+        """ Plot the curve at a particular time step number """
         self.new_figure()
 
         plt.plot(*self.split_array(self.qA),ls="--")
@@ -278,6 +346,7 @@ class Immersion:
 
 
     def plot_quiver(self, n):
+        """ Plot the curve and the vector field at a particular timestep """
         self.new_figure()
 
         x,y = self.split_array(self.Q[n])
@@ -296,6 +365,10 @@ class Immersion:
 
 
     def plot_path(self, sample_step = 1):
+        """ 
+        Plot the path of some points along the curve evolution.
+        Parameter controls to number of points to plot
+        """
         idx = np.arange(0,(self.template_size / 2), sample_step)
 
         qx, qy = self.split_array(self.qA)
@@ -319,18 +392,21 @@ class Immersion:
         
 
     def plot_no_split(self,Q):
+        """ Plot a UFL coefficient form, without spliting into to separate dims """
         plt.figure()
 
         plt.plot(Q.vector().array())
 
 
     def plot_qAqB(self):
+        """ Plot the template and target on the same figure """
         self.new_figure()
         plt.plot(*self.split_array(self.qA))
         plt.plot(*self.split_array(self.qB))
 
 
     def plot_steps(self):
+        """ Show an animatation of the evoluation of the deformation """
         plt.ion()
         self.new_figure()
 
@@ -349,6 +425,7 @@ class Immersion:
             
 
     def plot_steps_held(self):
+        """ Plot the deformation evolution """
         self.new_figure()
 
         plt.plot(*self.split_array(self.qB),ls='-')
@@ -362,6 +439,10 @@ class Immersion:
 
     # utility functions
     def split_array(self,q):
+        """ 
+        Split a numpy array, or UFL coefficient form into X, Y numpy
+        vectors.
+        """
         if isinstance(q, np.ndarray):
             x = 1.0*q
         else:
@@ -382,21 +463,36 @@ class Immersion:
 
 
 def template_size(**kwargs):
+    """ 
+    Return the size of the template/target vector needed 
+    for M cells and the FEM order 
+    """
     return Immersion(**kwargs).template_size
 
 def S(U, *args):
+    """ 
+    Calculate S for a velocity U and  Immersion class params.
+    This is called by the BFGS optimiser
+    """
+
     kwargs = args[0] #hack to get kwargs back out..
     im = Immersion(**kwargs)
     return im.calc_S(U)
 
 def dS(U, *args):
+    """ 
+    Calculate dSdu for a velocity U and  Immersion class params.
+    This is called by the BFGS optimiser
+    """
+
     kwargs = args[0] #hack to get kwargs back out..
     im = Immersion(**kwargs)
     return im.calc_dS(U)
 
 
-"Run a minimisation, takes the arguments needed to setup an Immersion class"
+
 def minimize(**kwargs):
+    "Run the optimiser. Takes same arguments needed to setup an Immersion class"
     im = Immersion(**kwargs)
     U = np.zeros(im.vec_size)
 
@@ -406,133 +502,3 @@ def minimize(**kwargs):
     im.calc_S(opt[0])
 
     return [opt, im]
-
-"Run a minimisation, takes the arguments needed to setup an Immersion class"
-def minimise(**kwargs):
-    return minimize(**kwargs)
-
-
-#------- TODO: move these to external module..
-
-"""
-This will run a test case from a directory in cases. 
-This must contain qa.txt and qb.txt, and you'll need to pass
-M if it differs from the defaults of M=100 (or you'll get an error)
-"""
-def run_case(casename, **kwargs):
-    #read tmpl, targ from files
-    case = "cases/" + casename + "/"
-
-    if os.path.exists(case):
-        targ = np.genfromtxt(case + "qb.txt", unpack=True)
-        tmpl = np.genfromtxt(case + "qa.txt", unpack=True)
-        
-        o = minimize(qA=tmpl,qB=targ, **kwargs)
-
-        print "case ", case, "S = ", o[0][1]
-        im = o[1]
-
-        for n in xrange(im.N):
-            im.plot(im.Q[n])
-            plt.savefig("%sq_%d.pdf" % (case, n),bbox_inches='tight')
-
-            im.plot_step(n)
-            plt.savefig("%sstep_%d.pdf" % (case, n),bbox_inches='tight')
-
-            im.plot_quiver(n)
-            plt.savefig("%squiver_%d.pdf" % (case, n),bbox_inches='tight')
-
-            
-        im.plot_steps_held()
-        plt.savefig(case+"steps.pdf",bbox_inches='tight')
-
-        im.plot(im.qA)
-        plt.savefig(case+"qa.pdf",bbox_inches='tight')
-
-        im.plot(im.qB)
-        plt.savefig(case+"qb.pdf",bbox_inches='tight')
-
-        im.plot_qAqB()
-        plt.savefig(case+"qaqb.pdf",bbox_inches='tight')
-
-
-        im.plot_path(1)
-        plt.savefig(case+"path.pdf",bbox_inches='tight')
-
-        np.savetxt(case+"u.txt", o[0][0], fmt="%12.6G")
-
-        return im
-    else:
-        if os.path.exists("cases"):
-            cases = ", ".join(os.listdir("cases"))
-        else:
-            cases = "NONE -- no cases directory"
-        raise OSError, "That case does not exist. Choices: " + cases
-
-
-def load_case(casename):
-    case = "cases/" + casename + "/"
-
-    if os.path.exists(case+"u.txt"):
-        
-        targ = np.genfromtxt(case + "qb.txt", unpack=True)
-        tmpl = np.genfromtxt(case + "qa.txt", unpack=True)
-        U = np.genfromtxt(case + "u.txt", unpack=True)
-
-        im = Immersion(100, 10, tmpl,targ,0.001,0.001)
-
-        im.calc_S(U)
-
-        return im
-    else:
-        raise OSError, "That case does not exist, or has no been run yet."
-
-
-def deg_test(degs):
-    case = "deg_test"
-
-    ims = []
-
-    for d in degs:
-        print d
-        targ = np.genfromtxt("%s/%d_qb.txt" % (case,d), unpack=True)
-        tmpl = np.genfromtxt("%s/%d_qa.txt" % (case,d), unpack=True)
-
-        print np.shape(tmpl)
-        print np.shape(targ)
-
-        opt = minimize(qA=tmpl,qB=targ,deg=d)
-
-        opt[1].plot_steps_held()
-        ims.append(opt)
-
-    return ims
-
-def run_reparm(M=100,N=10):
-    case = "reparams"
-
-    qa = ('100*sin(x[0])','100*cos(x[0])')
-    qb1 = ('50*sin(x[0])','50*cos(x[0])')
-
-    qb2 = ('50*sin(x[0]+pi/4.)','50*cos(x[0]+pi/4.)')
-    qb3 = ('50*sin(2*x[0])','50*cos(2*x[0])')
-    qb4 = ('50*cos(x[0])','50*sin(x[0])')
-    
-
-    opts = []
-
-    for i, qb in enumerate([qb1,qb2,qb3,qb4]):
-        o = minimise(M=M, N=N, qA=qa, qB=qb)
-
-        print "Reparam ", i, " S = ",o[0][1]
-        o[1].plot_steps_held()
-        plt.savefig("%s/steps_%d.pdf" % (case, i),bbox_inches='tight')
-
-        o[1].plot_path(3)
-        plt.savefig("%s/path_%d.pdf" % (case, i),bbox_inches='tight')
-
-        opts.append(o)
-
-    return opts
-
-

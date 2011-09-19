@@ -1,1 +1,20 @@
-This is my MSc project.
+Robert Crim - robert.crim10@imperial.ac.uk / rjcrim@gmail.com
+=============================================================
+
+
+The main module for the solver is image_deformation.py, which is mostly self documented
+
+To find the minimal velocity to deform qA to qB (solve the problem), see the minimize() method.
+
+The examples directory contains some sample usage
+
+
+The MATLAB script will trace png files and output a file with the x and y values concatinated, with the size specified as a parameter.
+
+required pacakges:
+
+Dolfin (from FEniCS project)
+Scipy
+Numpy
+Matplotlib
+

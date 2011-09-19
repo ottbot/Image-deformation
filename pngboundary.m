@@ -1,5 +1,16 @@
 function vec = pngboundary(name, vsize)
-
+% Trace the boundary of a shape from a PNG image. The image should be solid
+% black "blob" on a white background. The name parameter is the path (without
+% extension) to the
+% file, without the extenstion. A txt file  with a single column of concatenated 
+% X and Y vectors will be saved in the same directory.
+    
+% Example:
+%   # pngboundry('case_studies/foo/qa', 100)
+    
+%    This will trace case_studies/foo/qa.png can create a file
+%    case_studies/foo/qa.txt with 100 x values and 100 y values, ready for
+%    use with the image_deformation python module
 
     picname = sprintf('%s.png', name);
 
